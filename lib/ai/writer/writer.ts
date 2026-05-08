@@ -41,7 +41,7 @@ function buildContextBlock(ctx: WriterContext): string {
         text += `プロジェクト名: ${ctx.projectContext.title}\n`;
         if (ctx.projectContext.description) text += `説明: ${ctx.projectContext.description}\n`;
         if (ctx.projectContext.objective) text += `目的: ${ctx.projectContext.objective}\n`;
-        
+
         const details = [
             ctx.projectContext.ageRange && `年齢層: ${ctx.projectContext.ageRange}`,
             ctx.projectContext.gender && `性別: ${ctx.projectContext.gender}`,
@@ -50,19 +50,30 @@ function buildContextBlock(ctx: WriterContext): string {
         ].filter(Boolean).join(', ');
         if (details) text += `ターゲット層: ${details}\n`;
 
-        if (ctx.projectContext.toneStyle) text += `トーン: ${ctx.projectContext.toneStyle}\n`;
-        if (ctx.projectContext.writingStyleNotes) text += `執筆ルール: ${ctx.projectContext.writingStyleNotes}\n`;
+        // Brand voice — core to caption generation
+        if (ctx.projectContext.toneStyle) text += `ブランドトーン: ${ctx.projectContext.toneStyle}\n`;
+        if (ctx.projectContext.writingStyleNotes) text += `執筆スタイルのルール: ${ctx.projectContext.writingStyleNotes}\n`;
 
-        if (ctx.projectContext.wordsToAvoid) text += `NGワード: ${ctx.projectContext.wordsToAvoid}\n`;
-        if (ctx.projectContext.toneRestrictions) text += `制限事項: ${ctx.projectContext.toneRestrictions}\n`;
+        // Constraints — must be respected
+        if (ctx.projectContext.wordsToAvoid) text += `【使用禁止ワード】: ${ctx.projectContext.wordsToAvoid}\n`;
+        if (ctx.projectContext.toneRestrictions) text += `【トーン制限】: ${ctx.projectContext.toneRestrictions}\n`;
 
+        // CTA — explicitly instruct the model
+        if (ctx.projectContext.preferredCtaTypes) text += `【CTA — 必ず含めること】: ${ctx.projectContext.preferredCtaTypes}\n`;
+
+        // Additional instructions
         if (ctx.projectContext.customPromptNotes) text += `カスタム指示: ${ctx.projectContext.customPromptNotes}\n`;
         if (ctx.projectContext.campaignSpecificInstructions) text += `キャンペーン指示: ${ctx.projectContext.campaignSpecificInstructions}\n`;
 
-        if (ctx.projectContext.defaultHashtags && ctx.projectContext.defaultHashtags.length > 0) {
-            text += `デフォルトタグ: ${ctx.projectContext.defaultHashtags.join(' ')}\n`;
+        // Example captions — show the model what style to emulate
+        if (ctx.projectContext.exampleCaptions) {
+            text += `\n[参考キャプション — このスタイルを参考にすること]\n${ctx.projectContext.exampleCaptions}\n`;
         }
-        
+
+        if (ctx.projectContext.defaultHashtags && ctx.projectContext.defaultHashtags.length > 0) {
+            text += `デフォルトタグ（必ず含める）: ${ctx.projectContext.defaultHashtags.join(' ')}\n`;
+        }
+
         text += '\n';
     }
 
@@ -134,12 +145,15 @@ ${contextBlock}
 【キャプション作成ルール】
 1. 最初の1行（フック）は40文字以内で、読者の注意を引くこと
 2. 画像をただ説明するのではなく、ストーリーや感情を伝えること
-3. CTAは自然に組み込むこと（強引にならないように）
+3. ${ctx.projectContext?.preferredCtaTypes ? `【CTA必須】プロジェクトで指定されたCTAを自然な形で必ず含めること: ${ctx.projectContext.preferredCtaTypes}` : 'CTAは自然に組み込むこと（強引にならないように）'}
 4. AIっぽい定型文やマーケティングテンプレートは避けること
-5. ハッシュタグは日本語と英語を混ぜ、広いものとニッチなものを8〜15個
-${ctx.patternData ? '6. 過去の投稿パターンに合わせて一貫性を保つこと' : ''}
-${ctx.userPrompt ? '7. ユーザーの指示を最優先で反映すること' : ''}
-${isSlightAI ? '8. 画像の分析データが提供されていないため、過去のパターンのトーンとユーザーのプロンプトだけに集中すること。' : ''}
+5. ${ctx.projectContext?.wordsToAvoid ? `【厳守】以下のワードは絶対に使用しないこと: ${ctx.projectContext.wordsToAvoid}` : 'ありきたりな言葉や使い古したフレーズは避けること'}
+6. ${ctx.projectContext?.toneStyle ? `ブランドトーンを厳守すること: ${ctx.projectContext.toneStyle}` : 'ターゲット読者に合ったトーンで書くこと'}
+7. ハッシュタグは日本語と英語を混ぜ、広いものとニッチなものを8〜15個${ctx.projectContext?.defaultHashtags?.length ? '（プロジェクトのデフォルトタグを必ず含める）' : ''}
+${ctx.projectContext?.exampleCaptions ? '8. 参考キャプションのスタイル・リズム・言い回しを参考にして、同じトーンで書くこと' : ''}
+${ctx.patternData ? `${ctx.projectContext?.exampleCaptions ? '9' : '8'}. 過去の投稿パターンに合わせて一貫性を保つこと` : ''}
+${ctx.userPrompt ? `${ctx.patternData ? '10' : ctx.projectContext?.exampleCaptions ? '9' : '8'}. ユーザーの指示を最優先で反映すること` : ''}
+${isSlightAI ? '※ 画像の分析データが提供されていないため、過去のパターンのトーンとユーザーのプロンプトだけに集中すること。' : ''}
 
 出力形式（JSON）:
 {

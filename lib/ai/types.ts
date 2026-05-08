@@ -23,15 +23,10 @@ export interface ProjectContext {
     toneRestrictions?: string;
     customPromptNotes?: string;
     campaignSpecificInstructions?: string;
-    postingPlan?: {
-        frequency?: string;
-        recommendedPostingTime?: string;
-        campaignPeriod?: string;
-    };
-    instructions?: {
-        customPromptInstructions?: string;
-        campaignSpecificInstructions?: string;
-    };
+    postingFrequency?: string;
+    preferredTimeSlots?: string;
+    campaignDuration?: string;
+    preferredCtaTypes?: string;
 }
 
 export interface PipelineInput {

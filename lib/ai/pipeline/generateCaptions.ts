@@ -112,9 +112,8 @@ export async function generateCaptions(input: PipelineInput): Promise<PipelineOu
         patternData.pattern_summary = `We analyzed ${pastCaptions.length} of your past successful posts. We learned that your audience responds well to a ${patternData.tone} tone and ${patternData.avg_length} captions. We will apply this specific hook style (${patternData.hook_style}) to your new caption.`;
     }
 
-    // Determine if we should skip project context based on Slight AI mode
-    const isSlightAI = input.aiUsageOption === 'Slight AI' || input.aiUsageOption === 'Slight AI Use';
-    const activeProjectContext = isSlightAI ? undefined : input.projectContext;
+    // Pass project context in every AI mode
+    const activeProjectContext = input.projectContext;
 
     // ── 5. BUILD CONTEXT + WRITE CAPTION (1 API call) ───────────────────
     console.log('[Pipeline] Stage 5: Generating caption...');

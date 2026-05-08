@@ -392,6 +392,102 @@ export default function ProjectsClient({ initialProjects }: ProjectsClientProps)
                                     </div>
                                 </div>
                             )}
+
+                            {(viewingProject.writingStyleNotes || viewingProject.exampleCaptions) && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">ブランドボイス</h3>
+                                    <div className="space-y-3 mt-3">
+                                        {viewingProject.writingStyleNotes && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">執筆スタイル</span>
+                                                <p className="text-sm font-semibold text-gray-900">{viewingProject.writingStyleNotes}</p>
+                                            </div>
+                                        )}
+                                        {viewingProject.exampleCaptions && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">参考キャプション</span>
+                                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 whitespace-pre-wrap leading-relaxed">{viewingProject.exampleCaptions}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(viewingProject.postingFrequency || viewingProject.preferredTimeSlots || viewingProject.campaignDuration) && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">投稿プラン</h3>
+                                    <div className="grid grid-cols-2 gap-4 mt-3">
+                                        {viewingProject.postingFrequency && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">投稿頻度</span>
+                                                <span className="text-sm font-semibold text-gray-900">{FREQUENCY_OPTIONS.find(o => o.value === viewingProject.postingFrequency)?.label || viewingProject.postingFrequency}</span>
+                                            </div>
+                                        )}
+                                        {viewingProject.preferredTimeSlots && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">推奨投稿時間</span>
+                                                <span className="text-sm font-semibold text-gray-900">{viewingProject.preferredTimeSlots}</span>
+                                            </div>
+                                        )}
+                                        {viewingProject.campaignDuration && (
+                                            <div className="col-span-2">
+                                                <span className="text-xs text-gray-500 block mb-0.5">キャンペーン期間</span>
+                                                <span className="text-sm font-semibold text-gray-900">{viewingProject.campaignDuration}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(viewingProject.preferredCtaTypes || viewingProject.wordsToAvoid || viewingProject.toneRestrictions) && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">CTAと制限事項</h3>
+                                    <div className="space-y-3 mt-3">
+                                        {viewingProject.preferredCtaTypes && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">推奨CTA</span>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {viewingProject.preferredCtaTypes.split(',').map(c => c.trim()).filter(Boolean).map((c, i) => (
+                                                        <span key={i} className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">{c}</span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {viewingProject.wordsToAvoid && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">NGワード</span>
+                                                <p className="text-sm font-semibold text-red-700">{viewingProject.wordsToAvoid}</p>
+                                            </div>
+                                        )}
+                                        {viewingProject.toneRestrictions && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">トーン制限</span>
+                                                <p className="text-sm font-semibold text-gray-900">{TONE_RESTRICTIONS_OPTIONS.find(o => o.value === viewingProject.toneRestrictions)?.label || viewingProject.toneRestrictions}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {(viewingProject.customPromptNotes || viewingProject.campaignSpecificInstructions) && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2">追加の指示</h3>
+                                    <div className="space-y-3 mt-3">
+                                        {viewingProject.customPromptNotes && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">カスタムプロンプト指示</span>
+                                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 whitespace-pre-wrap leading-relaxed">{viewingProject.customPromptNotes}</p>
+                                            </div>
+                                        )}
+                                        {viewingProject.campaignSpecificInstructions && (
+                                            <div>
+                                                <span className="text-xs text-gray-500 block mb-0.5">キャンペーン固有の指示</span>
+                                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 whitespace-pre-wrap leading-relaxed">{viewingProject.campaignSpecificInstructions}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

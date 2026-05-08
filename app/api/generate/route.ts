@@ -83,6 +83,10 @@ export async function POST(req: Request) {
                 toneRestrictions: project.toneRestrictions || undefined,
                 customPromptNotes: project.customPromptNotes || undefined,
                 campaignSpecificInstructions: project.campaignSpecificInstructions || undefined,
+                postingFrequency: project.postingFrequency || undefined,
+                preferredTimeSlots: project.preferredTimeSlots || undefined,
+                campaignDuration: project.campaignDuration || undefined,
+                preferredCtaTypes: project.preferredCtaTypes || undefined,
             };
 
             // Fetch published posts for this project to extract past captions
