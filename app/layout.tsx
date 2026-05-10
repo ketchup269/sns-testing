@@ -17,6 +17,9 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Gravia — AIでインスタ運用を、もっと楽に、もっと伸ばす。",
+  icons: {
+    icon: "/images/gravia_mark.png",
+  },
   description: "GraviaはAIを活用したInstagram運用プラットフォームです。キャプション自動生成・スケジュール管理・アナリティクスを一括で。",
 };
 
