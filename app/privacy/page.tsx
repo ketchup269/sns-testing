@@ -5,24 +5,24 @@ import { ArrowLeft } from "lucide-react";
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+      <div className="max-w-3xl w-full space-y-8 bg-card dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-card-border dark:border-gray-700">
         <div className="flex items-center space-x-4 mb-8">
           <Link
             href="/"
-            className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+            className="text-muted-text hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-foreground dark:text-white">
             プライバシーポリシー
           </h1>
         </div>
 
-        <div className="prose dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 space-y-6">
+        <div className="prose dark:prose-invert max-w-none text-muted-text dark:text-gray-300 space-y-6">
           <p>最終更新日: {new Date().toLocaleDateString('ja-JP')}</p>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               1. 収集する情報
             </h2>
             <p>
@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               2. 情報の利用目的
             </h2>
             <p>収集した情報は以下の目的に利用します：</p>
@@ -57,7 +57,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               3. 情報の共有と第三者サービス
             </h2>
             <p>
@@ -69,7 +69,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               4. データの保持と削除
             </h2>
             <p>
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               5. セキュリティ
             </h2>
             <p>
@@ -90,7 +90,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               6. プライバシーポリシーの変更
             </h2>
             <p>
@@ -99,7 +99,7 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h2 className="text-xl font-semibold text-foreground dark:text-white mb-3">
               7. お問い合わせ
             </h2>
             <p>

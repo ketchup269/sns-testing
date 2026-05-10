@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
     LayoutDashboard,
@@ -57,14 +58,14 @@ export function Sidebar({ user }: SidebarProps) {
             )}
             
             <aside 
-                className={`fixed lg:relative inset-y-0 left-0 z-50 bg-white border-r border-gray-200 flex flex-col h-full overflow-y-auto transform transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] shrink-0 ${isOpen ? 'w-64 translate-x-0 shadow-2xl lg:shadow-none' : 'w-64 -translate-x-full lg:translate-x-0 lg:w-20'}`}
+                className={`fixed lg:relative inset-y-0 left-0 z-50 bg-card border-r border-card-border flex flex-col h-full overflow-y-auto transform transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] shrink-0 ${isOpen ? 'w-64 translate-x-0 shadow-2xl lg:shadow-none' : 'w-64 -translate-x-full lg:translate-x-0 lg:w-20'}`}
             >
                 {/* Close Button / Mobile Header */}
-                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100 lg:hidden">
-                    <span className="font-bold text-gray-900 tracking-tight text-lg">Menu</span>
+                <div className="h-16 flex items-center justify-between px-6 border-b border-card-border lg:hidden">
+                    <span className="font-bold text-foreground tracking-tight text-lg">Menu</span>
                     <button 
                         onClick={closeSidebar}
-                        className="p-2 -mr-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors"
+                        className="p-2 -mr-2 text-muted-text/80 hover:text-gray-600 hover:bg-surface/80 dark:hover:bg-surface/50 rounded-xl transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -79,51 +80,51 @@ export function Sidebar({ user }: SidebarProps) {
                             key={item.name}
                             href={item.href}
                             className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-out active:scale-[0.98] group relative ${isActive
-                                ? 'bg-gray-100 text-gray-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),_0_1px_2px_rgba(0,0,0,0.02)]'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                ? 'bg-purple-50 dark:bg-purple-900/20 text-foreground dark:text-white'
+                                : 'text-[#1E1B4B]/60 dark:text-white/60 hover:bg-surface/80 dark:hover:bg-surface/50 dark:hover:bg-white/5 hover:text-[#1E1B4B] dark:hover:text-white'
                                 } ${!isOpen ? 'lg:justify-center' : ''}`}
                             title={!isOpen ? item.name : undefined}
                         >
-                            <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'
+                            <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-[#7C3AED] dark:text-purple-400' : 'text-[#1E1B4B]/40 dark:text-white/40 group-hover:text-[#1E1B4B]/70 dark:group-hover:text-white/70'
                                 }`} />
                             
                             <span className={`ml-3 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100 flex-1' : 'lg:hidden opacity-0 w-0'}`}>
                                 {item.name}
                             </span>
                             
-                            {isActive && isOpen && <div className="w-1.5 h-1.5 rounded-full bg-gray-900 shadow-[0_0_8px_rgba(0,0,0,0.5)] shrink-0 ml-auto" />}
+                            {isActive && isOpen && <div className="w-1.5 h-1.5 rounded-full shrink-0 ml-auto" style={{background:'linear-gradient(135deg,#7C3AED,#EC4899,#F97316)'}} />}
                         </Link>
                     )
                 })}
             </nav>
 
             {/* Bottom Section: Profile/Logout */}
-            <div className={`p-4 border-t border-gray-100 ${!isOpen ? 'lg:p-2' : ''}`}>
+            <div className={`p-4 border-t border-card-border ${!isOpen ? 'lg:p-2' : ''}`}>
                 <button
                     onClick={() => signOut()}
-                    className={`w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 ease-out active:scale-[0.98] group ${!isOpen ? 'lg:px-0 lg:py-3' : ''}`}
+                    className={`w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium text-muted-text hover:bg-red-50 hover:text-red-700 transition-all duration-200 ease-out active:scale-[0.98] group ${!isOpen ? 'lg:px-0 lg:py-3' : ''}`}
                     title={!isOpen ? 'ログアウト' : undefined}
                 >
-                    <LogOut className="w-5 h-5 shrink-0 text-gray-400 group-hover:text-red-500 transition-colors" />
+                    <LogOut className="w-5 h-5 shrink-0 text-muted-text/80 group-hover:text-red-500 transition-colors" />
                     <span className={`ml-3 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100' : 'lg:hidden opacity-0 w-0'}`}>
                         ログアウト
                     </span>
                 </button>
 
-                <div className={`mt-4 bg-gray-50 rounded-xl border border-gray-100 cursor-pointer hover:bg-white transition-all duration-200 ease-out hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-transparent hover:ring-gray-200 active:scale-[0.98] group ${isOpen ? 'p-3' : 'lg:p-1.5 p-3'}`} title={!isOpen ? user?.name || 'User' : undefined}>
+                <div className={`mt-4 bg-surface dark:bg-transparent rounded-xl border border-card-border dark:border-white/10 cursor-pointer hover:bg-white dark:hover:bg-white/5 transition-all duration-200 ease-out hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-transparent hover:ring-gray-200 dark:hover:ring-white/20 active:scale-[0.98] group ${isOpen ? 'p-3' : 'lg:p-1.5 p-3'}`} title={!isOpen ? user?.name || 'User' : undefined}>
                     <div className={`flex items-center ${!isOpen ? 'lg:justify-center' : 'gap-3'}`}>
-                        <div className={`rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold shadow-sm overflow-hidden group-hover:shadow-md transition-shadow shrink-0 ${isOpen ? 'w-10 h-10' : 'lg:w-8 lg:h-8 w-10 h-10 text-xs'}`}>
+                        <div className={`rounded-full flex items-center justify-center text-white font-bold shadow-sm overflow-hidden group-hover:shadow-md transition-shadow shrink-0 ${isOpen ? 'w-10 h-10' : 'lg:w-8 lg:h-8 w-10 h-10 text-xs'}`} style={{background:'linear-gradient(135deg,#7C3AED,#EC4899,#F97316)'}}>
                             {user?.image ? (
-                                <img src={user.image} alt="User avatar" className="w-full h-full object-cover" />
+                                <Image src={user.image} alt="User avatar" width={40} height={40} className="w-full h-full object-cover" />
                             ) : (
                                 initials
                             )}
                         </div>
                         <div className={`flex-1 min-w-0 transition-all duration-200 flex flex-col justify-center ${isOpen ? 'opacity-100' : 'lg:hidden opacity-0 w-0'}`}>
-                            <p className="text-sm font-semibold text-gray-900 truncate tracking-tight">{user?.name || 'User'}</p>
-                            <p className="text-[10px] sm:text-xs font-medium text-gray-500 truncate">{user?.email}</p>
+                            <p className="text-sm font-semibold text-foreground dark:text-white truncate tracking-tight">{user?.name || 'User'}</p>
+                            <p className="text-[10px] sm:text-xs font-medium text-[#1E1B4B]/50 dark:text-white/50 truncate">{user?.email}</p>
                         </div>
-                        {isOpen && <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors shrink-0" />}
+                        {isOpen && <ChevronRight className="w-4 h-4 text-muted-text/80 group-hover:text-gray-600 transition-colors shrink-0" />}
                     </div>
                 </div>
             </div>

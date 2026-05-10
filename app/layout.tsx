@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -8,9 +9,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "SNS Automation",
-  description: "Social media automation with AI",
+  title: "Gravia — AIでインスタ運用を、もっと楽に、もっと伸ばす。",
+  description: "GraviaはAIを活用したInstagram運用プラットフォームです。キャプション自動生成・スケジュール管理・アナリティクスを一括で。",
 };
 
 export default function RootLayout({
@@ -19,9 +26,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ja" suppressHydrationWarning>
       <body
-        className={`${geistMono.variable} antialiased`}
+        className={`${geistMono.variable} ${inter.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

@@ -119,6 +119,24 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
     const [scheduledFor, setScheduledFor] = useState('')
     const [showDatePicker, setShowDatePicker] = useState(false)
 
+    // Auto-fill schedule when project with preferredTimeSlots is selected
+    useEffect(() => {
+        const timeStr = selectedProject?.preferredTimeSlots
+        if (!timeStr) return
+        // Parse the first time from strings like "19:00-21:00" or "19:00"
+        const match = timeStr.match(/(\d{1,2}):(\d{2})/)
+        if (!match) return
+        const [, h, m] = match
+        const now = new Date()
+        now.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0)
+        // If the time has already passed today, schedule for tomorrow
+        if (now <= new Date()) now.setDate(now.getDate() + 1)
+        const offset = now.getTimezoneOffset() * 60000
+        const localISO = new Date(now.getTime() - offset).toISOString().slice(0, 16)
+        setScheduledFor(localISO)
+        setShowDatePicker(true)
+    }, [selectedProjectId])
+
     // When project changes, replace hashtag lines at end of caption with new project defaults
     const prevProjectIdRef = useRef(selectedProjectId)
     useEffect(() => {
@@ -220,7 +238,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
         <div className="w-full max-w-full h-full flex flex-col space-y-4 pb-32 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
             <div className="flex items-center justify-between gap-4 pb-1">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">
                     コンテンツ作成
                 </h1>
             </div>
@@ -239,12 +257,12 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
 
             {/* Form Container */}
             {projects.length === 0 && !isProjectsLoading ? (
-                <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden p-10 flex flex-col items-center justify-center space-y-4 shadow-sm min-h-[400px]">
+                <div className="bg-card border border-card-border rounded-2xl overflow-hidden p-10 flex flex-col items-center justify-center space-y-4 shadow-sm min-h-[400px]">
                     <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center">
                         <FolderPlus className="w-8 h-8 text-indigo-500" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900">プロジェクトを作成してください</h2>
-                    <p className="text-gray-500 text-center max-w-sm">
+                    <h2 className="text-xl font-bold text-foreground">プロジェクトを作成してください</h2>
+                    <p className="text-muted-text text-center max-w-sm">
                         コンテンツを作成するには、まずプロジェクト（ブランドやキャンペーンなど）を作成する必要があります。
                     </p>
                     <button
@@ -257,7 +275,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                     </button>
                 </div>
             ) : (
-                <form id="create-post-form" onSubmit={(e) => { e.preventDefault(); handlePublishAction('now'); }} className="bg-white border border-gray-200 rounded-2xl overflow-hidden p-6 md:p-8 space-y-6 shadow-sm">
+                <form id="create-post-form" onSubmit={(e) => { e.preventDefault(); handlePublishAction('now'); }} className="bg-card border border-card-border rounded-2xl overflow-hidden p-6 md:p-8 space-y-6 shadow-sm">
 
                     {/* Project Selector & AI Badge */}
                     {!isProjectsLoading && projects.length > 0 && (
@@ -270,15 +288,15 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                     'flex items-center gap-2.5 pl-3 pr-2.5 py-2 rounded-xl border text-sm font-bold transition-all cursor-pointer',
                                     isProjectDropdownOpen
                                         ? 'bg-indigo-50 border-indigo-300 text-indigo-700 ring-2 ring-indigo-200'
-                                        : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200 hover:bg-indigo-50/40 shadow-sm'
+                                        : 'bg-card border-card-border text-foreground/80 hover:border-indigo-200 hover:bg-indigo-50/40 shadow-sm'
                                 )}
                             >
                                 <FolderKanban className="w-4 h-4 text-indigo-500 shrink-0" />
                                 <span className="max-w-[240px] truncate">{selectedProject?.name || 'プロジェクト選択'}</span>
-                                <ChevronDown className={cn('w-4 h-4 text-gray-400 transition-transform duration-200', isProjectDropdownOpen && 'rotate-180')} />
+                                <ChevronDown className={cn('w-4 h-4 text-muted-text/80 transition-transform duration-200', isProjectDropdownOpen && 'rotate-180')} />
                             </button>
                             {isProjectDropdownOpen && (
-                                <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl border border-gray-200 shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                                <div className="absolute left-0 top-full mt-2 w-72 bg-card rounded-xl border border-card-border shadow-xl z-50 py-1 animate-in fade-in slide-in-from-top-2 duration-150">
                                     <div className="max-h-64 overflow-y-auto py-1">
                                         {projects.map(p => (
                                             <button
@@ -292,16 +310,16 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                     'w-full text-left px-3 py-2.5 flex items-start gap-2.5 transition-colors',
                                                     p.id === selectedProjectId
                                                         ? 'bg-indigo-50'
-                                                        : 'hover:bg-gray-50'
+                                                        : 'hover:bg-surface/80 dark:hover:bg-surface/50'
                                                 )}
                                             >
-                                                <FolderKanban className={cn('w-4 h-4 mt-0.5 shrink-0', p.id === selectedProjectId ? 'text-indigo-600' : 'text-gray-400')} />
+                                                <FolderKanban className={cn('w-4 h-4 mt-0.5 shrink-0', p.id === selectedProjectId ? 'text-indigo-600' : 'text-muted-text/80')} />
                                                 <div className="flex-1 min-w-0">
                                                     <div className={cn('text-sm font-semibold truncate', p.id === selectedProjectId ? 'text-indigo-700' : 'text-gray-800')}>
                                                         {p.name}
                                                     </div>
                                                     {p.description && (
-                                                        <div className="text-[11px] text-gray-400 truncate mt-0.5">{p.description}</div>
+                                                        <div className="text-[11px] text-muted-text/80 truncate mt-0.5">{p.description}</div>
                                                     )}
                                                     {p.defaultHashtags?.length > 0 && (
                                                         <div className="text-[10px] text-blue-500 mt-1 truncate">
@@ -331,19 +349,19 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                         {/* Section 1: Media & Gallery */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <label className="block text-sm font-bold text-gray-900">メディア</label>
+                                <label className="block text-sm font-bold text-foreground">メディア</label>
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={() => setShowDraftsModal(true)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-600 hover:text-amber-600 font-bold rounded-xl shadow-sm hover:bg-gray-50 hover:border-amber-200 transition-all text-xs"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-card-border text-muted-text hover:text-amber-600 font-bold rounded-xl shadow-sm hover:bg-surface/80 dark:hover:bg-surface/50 hover:border-amber-200 transition-all text-xs"
                                     >
                                         <FileEdit className="w-3.5 h-3.5" />下書きから編集
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowHistoryModal(true)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 text-gray-600 hover:text-indigo-600 font-bold rounded-xl shadow-sm hover:bg-gray-50 hover:border-indigo-200 transition-all text-xs"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-card-border text-muted-text hover:text-indigo-600 font-bold rounded-xl shadow-sm hover:bg-surface/80 dark:hover:bg-surface/50 hover:border-indigo-200 transition-all text-xs"
                                     >
                                         <History className="w-3.5 h-3.5" />履歴から再利用
                                     </button>
@@ -358,13 +376,13 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                         return (
                                             <div key={item.id} className="relative shrink-0 snap-start group">
                                                 {item.type === 'file' && item.file.type.startsWith('video/') || (item.type === 'url' && item.isVideo) ? (
-                                                    <div className="w-[140px] h-[140px] rounded-xl bg-gray-900 flex items-center justify-center border border-gray-200 shadow-sm relative overflow-hidden">
+                                                    <div className="w-[140px] h-[140px] rounded-xl bg-gray-900 flex items-center justify-center border border-card-border shadow-sm relative overflow-hidden">
                                                         <img src={src} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="" />
                                                         <Video className="w-8 h-8 text-white/80 z-10" />
                                                         <span className="absolute bottom-2 left-2 text-[10px] bg-white/20 text-white backdrop-blur-md px-2 py-0.5 rounded font-medium z-10">REEL</span>
                                                     </div>
                                                 ) : (
-                                                    <img src={src} className="w-[140px] h-[140px] rounded-xl object-cover border border-gray-200 shadow-sm" alt="media" />
+                                                    <img src={src} className="w-[140px] h-[140px] rounded-xl object-cover border border-card-border shadow-sm" alt="media" />
                                                 )}
                                                 <button
                                                     type="button"
@@ -377,9 +395,9 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                         )
                                     })}
                                     {!isVideo && (
-                                        <label className="shrink-0 w-[140px] h-[140px] rounded-xl border-2 border-dashed border-gray-300 hover:border-gray-400 bg-gray-50 flex flex-col items-center justify-center cursor-pointer transition-all gap-2">
-                                            <Plus className="w-5 h-5 text-gray-500" />
-                                            <span className="text-xs text-gray-500 font-medium">追加</span>
+                                        <label className="shrink-0 w-[140px] h-[140px] rounded-xl border-2 border-dashed border-gray-300 hover:border-gray-400 bg-surface flex flex-col items-center justify-center cursor-pointer transition-all gap-2">
+                                            <Plus className="w-5 h-5 text-muted-text" />
+                                            <span className="text-xs text-muted-text font-medium">追加</span>
                                             <input type="file" multiple className="hidden" accept="image/*" onChange={e => handleFiles(Array.from(e.target.files || []))} />
                                         </label>
                                     )}
@@ -391,14 +409,14 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
 
                                 {/* 1. デバイスからアップロード（メインカード） */}
                                 {mediaItems.length === 0 && (
-                                    <div className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors shadow-sm relative group overflow-hidden h-40 md:h-56">
+                                    <div className="bg-card border border-card-border rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-surface/80 dark:hover:bg-surface/50 transition-colors shadow-sm relative group overflow-hidden h-40 md:h-56">
                                         <input type="file" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*,video/*" onChange={e => handleFiles(Array.from(e.target.files || []))} />
                                         <div className="w-16 h-16 bg-blue-50/50 rounded-3xl flex items-center justify-center mb-4 group-hover:scale-105 group-hover:-translate-y-1 transition-all duration-300">
                                             <Upload className="w-6 h-6 text-blue-500" />
                                         </div>
-                                        <h3 className="text-base font-bold text-gray-900 mb-1">デバイスからアップロード</h3>
-                                        <p className="text-sm text-gray-400 mb-4">ドラッグ＆ドロップ、またはクリックして参照</p>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400">
+                                        <h3 className="text-base font-bold text-foreground mb-1">デバイスからアップロード</h3>
+                                        <p className="text-sm text-muted-text/80 mb-4">ドラッグ＆ドロップ、またはクリックして参照</p>
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-muted-text/80">
                                             <span>JPG</span> • <span>PNG</span> • <span>WebP</span>
                                         </div>
                                     </div>
@@ -406,11 +424,11 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
 
                                 {/* 2. ライブラリ（アコーディオン） */}
                                 {selectedProjectId && (
-                                    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
                                         <button
                                             type="button"
                                             onClick={() => setIsLibraryExpanded(!isLibraryExpanded)}
-                                            className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+                                            className="w-full flex items-center justify-between px-6 py-4 hover:bg-surface/80 dark:hover:bg-surface/50 transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
@@ -418,24 +436,24 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                 </div>
                                                 <span className="font-bold text-gray-800">ライブラリ</span>
                                             </div>
-                                            <ChevronDown className={cn("w-5 h-5 text-gray-400 transition-transform duration-300", isLibraryExpanded && "rotate-180")} />
+                                            <ChevronDown className={cn("w-5 h-5 text-muted-text/80 transition-transform duration-300", isLibraryExpanded && "rotate-180")} />
                                         </button>
 
                                         <div className={cn("grid transition-[grid-template-rows] duration-300 ease-in-out", isLibraryExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
                                             <div className="overflow-hidden">
-                                                <div className="p-6 pt-0 border-t border-gray-100">
+                                                <div className="p-6 pt-0 border-t border-card-border">
                                                     {isLibraryUploading ? (
                                                         <div className="flex flex-col items-center justify-center py-8 gap-2">
                                                             <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
                                                             <div className="w-full max-w-xs bg-gray-200 rounded-full h-1.5 mt-2 overflow-hidden">
                                                                 <div className="bg-indigo-600 h-full rounded-full transition-all duration-300" style={{ width: `${libraryUploadProgress}%` }}></div>
                                                             </div>
-                                                            <span className="text-xs text-gray-500 font-bold">{libraryUploadProgress}%</span>
+                                                            <span className="text-xs text-muted-text font-bold">{libraryUploadProgress}%</span>
                                                         </div>
                                                     ) : (
                                                         <div className="flex flex-col gap-4 mt-2">
                                                             <div className="flex items-center justify-between">
-                                                                <span className="text-xs font-bold text-gray-400">{projectImages.length} 項目</span>
+                                                                <span className="text-xs font-bold text-muted-text/80">{projectImages.length} 項目</span>
                                                                 <label className="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5">
                                                                     <Plus className="w-3 h-3" />追加
                                                                     <input type="file" multiple className="hidden" accept="image/*" onChange={e => {
@@ -453,7 +471,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                                     </div>
                                                                 ) : projectImages.length > 0 ? (
                                                                     projectImages.map(img => (
-                                                                        <div key={img.id} className="aspect-square relative rounded-xl border border-gray-200 overflow-hidden cursor-pointer group shadow-sm bg-gray-50" onClick={() => loadFromLibrary(img)}>
+                                                                        <div key={img.id} className="aspect-square relative rounded-xl border border-card-border overflow-hidden cursor-pointer group shadow-sm bg-surface" onClick={() => loadFromLibrary(img)}>
                                                                             <img src={img.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
                                                                                 <span className="text-[10px] font-bold text-white bg-black/60 px-2 py-1 rounded-full border border-white/20">使う</span>
@@ -464,9 +482,9 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                                         </div>
                                                                     ))
                                                                 ) : (
-                                                                    <div className="col-span-full py-8 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                                                    <div className="col-span-full py-8 flex flex-col items-center justify-center bg-surface rounded-xl border border-dashed border-card-border">
                                                                         <FolderPlus className="w-6 h-6 text-gray-300 mb-2" />
-                                                                        <span className="text-xs text-gray-400 font-medium">画像がありません</span>
+                                                                        <span className="text-xs text-muted-text/80 font-medium">画像がありません</span>
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -479,7 +497,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                 )}
                             </div>
                             {!selectedProjectId && mediaItems.length === 0 && (
-                                <p className="text-xs text-gray-400 italic">※ プロジェクトを選択すると、ライブラリと履歴ギャラリーが有効になります。</p>
+                                <p className="text-xs text-muted-text/80 italic">※ プロジェクトを選択すると、ライブラリと履歴ギャラリーが有効になります。</p>
                             )}
                             {mediaItems.length > 1 && (
                                 <div className="flex items-center gap-2 px-3 py-2 bg-blue-50/50 border border-blue-100 rounded-lg text-xs text-blue-700 w-fit">
@@ -492,7 +510,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                         {/* Section 2: Caption */}
                         <div className="space-y-4 flex flex-col h-full">
                             <div className="flex items-center justify-between">
-                                <label className="block text-sm font-bold text-gray-900">キャプション</label>
+                                <label className="block text-sm font-bold text-foreground">キャプション</label>
                             </div>
                             {aiUsageOption !== 'No AI' && (
                                 <div className="flex flex-col gap-3">
@@ -510,13 +528,13 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                 }
                                             }}
                                             placeholder="AIへの追加指示（プロンプト）..."
-                                            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm placeholder:text-gray-400"
+                                            className="flex-1 bg-surface border border-card-border rounded-lg py-2.5 px-3 text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm placeholder:text-gray-400"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleGenerateCaption}
                                             disabled={isWorking || mediaItems.length === 0}
-                                            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all border shrink-0 bg-white border-gray-200 text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all border shrink-0 bg-card border-card-border text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 hover:shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <span className="flex items-center w-4 h-4 mr-0.5">
                                                 {isGeneratingAI ? <Loader2 className="w-full h-full animate-spin" /> : null}
@@ -534,10 +552,10 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                         onChange={e => setCaption(e.target.value)}
                                         placeholder="キャプションを入力、またはAIで自動生成..."
                                         className={cn(
-                                            "w-full h-full p-4 pb-10 rounded-xl text-gray-900 text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none transition-all resize-none shadow-sm peer",
+                                            "w-full h-full p-4 pb-10 rounded-xl text-foreground text-sm leading-relaxed placeholder:text-gray-400 focus:outline-none transition-all resize-none shadow-sm peer",
                                             caption.length > 0
                                                 ? "bg-blue-50/30 border-2 border-indigo-400 focus:ring-4 focus:ring-indigo-500/20"
-                                                : "bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-black/5 focus:border-gray-400 focus:bg-white min-h-[200px]"
+                                                : "bg-surface border border-card-border focus:ring-2 focus:ring-black/5 focus:border-gray-400 focus:bg-white min-h-[200px]"
                                         )}
                                         maxLength={2200}
                                     />
@@ -566,17 +584,17 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                         {analysisResults.imageAnalysis && (
                                                             <div className="space-y-1.5 bg-white/60 rounded-lg p-3 border border-indigo-50">
                                                                 <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2">画像認識 (Vision)</div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-16">シーン:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.scene}>{analysisResults.imageAnalysis.scene}</span></div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-16">ムード:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.mood}>{analysisResults.imageAnalysis.mood}</span></div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-16">被写体:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.primary_subject}>{analysisResults.imageAnalysis.primary_subject}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-16">シーン:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.scene}>{analysisResults.imageAnalysis.scene}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-16">ムード:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.mood}>{analysisResults.imageAnalysis.mood}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-16">被写体:</span> <span className="flex-1 truncate" title={analysisResults.imageAnalysis.primary_subject}>{analysisResults.imageAnalysis.primary_subject}</span></div>
                                                             </div>
                                                         )}
                                                         {analysisResults.patternAnalysis && (
                                                             <div className="space-y-1.5 bg-white/60 rounded-lg p-3 border border-indigo-50">
                                                                 <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-2">過去の傾向 (Pattern)</div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-12">トーン:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.tone}>{analysisResults.patternAnalysis.tone}</span></div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-12">フック:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.hook_style}>{analysisResults.patternAnalysis.hook_style}</span></div>
-                                                                <div className="text-xs text-gray-700 flex gap-2"><span className="font-semibold text-gray-900 w-12">長さ:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.avg_length}>{analysisResults.patternAnalysis.avg_length}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-12">トーン:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.tone}>{analysisResults.patternAnalysis.tone}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-12">フック:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.hook_style}>{analysisResults.patternAnalysis.hook_style}</span></div>
+                                                                <div className="text-xs text-foreground/80 flex gap-2"><span className="font-semibold text-foreground w-12">長さ:</span> <span className="flex-1 truncate" title={analysisResults.patternAnalysis.avg_length}>{analysisResults.patternAnalysis.avg_length}</span></div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -599,7 +617,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                     <div className="absolute bottom-3 right-3 flex items-center gap-2">
                                         <span className={cn(
                                             'text-[10px] font-bold px-2 py-1 rounded-md transition-colors border',
-                                            caption.length > 2000 ? 'bg-red-50 text-red-500 border-red-100' : 'bg-white/80 text-gray-400 border-gray-200 shadow-sm peer-focus:border-gray-300 peer-focus:text-gray-500'
+                                            caption.length > 2000 ? 'bg-red-50 text-red-500 border-red-100' : 'bg-white/80 text-muted-text/80 border-card-border shadow-sm peer-focus:border-gray-300 peer-focus:text-gray-500'
                                         )}>
                                             {caption.length} / 2200
                                         </span>
@@ -609,7 +627,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                         </div>
                     </div>
 
-                    <div className="h-px bg-gray-100" />
+                    <div className="h-px bg-surface" />
 
                     {/* Submit Controls Fixed to Bottom of Form */}
                     <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4">
@@ -618,7 +636,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                 type="button"
                                 onClick={() => setShowPreview(true)}
                                 disabled={mediaItems.length === 0}
-                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto shadow-sm"
+                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border border-card-border bg-card text-foreground/80 hover:bg-surface/80 dark:hover:bg-surface/50 hover:border-gray-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto shadow-sm"
                             >
                                 <Eye className="w-4 h-4" />
                                 プレビュー
@@ -628,7 +646,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                 type="button"
                                 onClick={handleSaveDraft}
                                 disabled={isWorking || !selectedAccountId || (mediaItems.length === 0 && !caption.trim())}
-                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 w-full sm:w-auto"
+                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all bg-card text-foreground/80 border border-gray-300 hover:bg-surface/80 dark:hover:bg-surface/50 hover:border-gray-400 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 w-full sm:w-auto"
                             >
                                 <FileImage className="w-4 h-4" />
                                 下書き
@@ -640,19 +658,19 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                 <button
                                     type="button"
                                     onClick={() => setShowDatePicker(true)}
-                                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:scale-95 w-full sm:w-auto"
+                                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border border-card-border bg-surface text-muted-text hover:bg-surface dark:hover:bg-surface/80 hover:text-gray-900 active:scale-95 w-full sm:w-auto"
                                 >
                                     <Calendar className="w-4 h-4" />
                                     予約を設定...
                                 </button>
                             ) : (
-                                <div className="flex items-center gap-2 animate-in fade-in zoom-in-95 bg-gray-50 p-1.5 rounded-xl border border-gray-200 w-full sm:w-auto">
+                                <div className="flex items-center gap-2 animate-in fade-in zoom-in-95 bg-surface p-1.5 rounded-xl border border-card-border w-full sm:w-auto">
                                     <input
                                         type="datetime-local"
                                         value={scheduledFor}
                                         onChange={e => setScheduledFor(e.target.value)}
                                         min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000 + 60000).toISOString().slice(0, 16)}
-                                        className="bg-white border border-gray-200 rounded-lg py-2 pl-3 pr-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 w-full sm:w-auto"
+                                        className="bg-card border border-card-border rounded-lg py-2 pl-3 pr-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 w-full sm:w-auto"
                                     />
                                     <button
                                         type="button"
@@ -662,7 +680,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                     >
                                         完了
                                     </button>
-                                    <button type="button" onClick={() => setShowDatePicker(false)} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"><X className="w-5 h-5" /></button>
+                                    <button type="button" onClick={() => setShowDatePicker(false)} className="p-2 text-muted-text/80 hover:text-gray-600 rounded-lg"><X className="w-5 h-5" /></button>
                                 </div>
                             )}
                             <button

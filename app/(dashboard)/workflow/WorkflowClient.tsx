@@ -20,7 +20,7 @@ function firstImageUrl(imageUrl: string): string {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 const statusConfig = {
-    DRAFT: { label: '下書き', color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200', dot: 'bg-gray-400', icon: FileText },
+    DRAFT: { label: '下書き', color: 'text-muted-text', bg: 'bg-surface', border: 'border-card-border', dot: 'bg-gray-400', icon: FileText },
     PENDING: { label: '予約済み', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', dot: 'bg-purple-500', icon: Clock },
     PUBLISHED: { label: '公開済み', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100', dot: 'bg-green-500', icon: CheckCircle2 },
     FAILED: { label: '失敗', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-500', icon: XCircle },
@@ -64,8 +64,8 @@ function PostCard({ post, statusKey }: { post: Post; statusKey: StatusKey }) {
     const isVideo = post.mediaType === 'VIDEO'
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group hover:border-purple-200 hover:shadow-md transition-all">
-            <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+        <div className="bg-card rounded-2xl border border-card-border shadow-sm overflow-hidden group hover:border-purple-200 hover:shadow-md transition-all">
+            <div className="aspect-[4/3] relative overflow-hidden bg-surface">
                 {isVideo ? (
                     <div className="w-full h-full bg-gray-900 flex items-center justify-center relative">
                         <img src={firstImageUrl(post.imageUrl)} alt="" className="w-full h-full object-cover opacity-50" />
@@ -93,11 +93,11 @@ function PostCard({ post, statusKey }: { post: Post; statusKey: StatusKey }) {
                 </div>
             </div>
             <div className="p-3 space-y-2">
-                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-muted-text line-clamp-2 leading-relaxed">
                     {post.caption || <span className="text-gray-300 italic">キャプションなし</span>}
                 </p>
                 {schedule && (
-                    <div className="flex items-center gap-1 text-gray-400">
+                    <div className="flex items-center gap-1 text-muted-text/80">
                         <Calendar className="w-3 h-3" />
                         <span className="text-[10px] font-semibold">
                             {new Date(schedule.scheduledFor).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -105,7 +105,7 @@ function PostCard({ post, statusKey }: { post: Post; statusKey: StatusKey }) {
                     </div>
                 )}
                 {!schedule && (
-                    <div className="flex items-center gap-1 text-gray-400">
+                    <div className="flex items-center gap-1 text-muted-text/80">
                         <Clock className="w-3 h-3" />
                         <span className="text-[10px] font-semibold">
                             {new Date(post.createdAt).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' })}
@@ -113,7 +113,7 @@ function PostCard({ post, statusKey }: { post: Post; statusKey: StatusKey }) {
                     </div>
                 )}
                 {statusKey === 'PUBLISHED' && (
-                    <div className="flex items-center gap-3 mt-2 border-t border-gray-100 pt-2">
+                    <div className="flex items-center gap-3 mt-2 border-t border-card-border pt-2">
                         <div className="flex items-center gap-1 text-pink-600 bg-pink-50 px-2 py-0.5 rounded-md">
                             <Heart className="w-3 h-3" /><span className="text-[10px] font-bold">{post.likes}</span>
                         </div>
@@ -150,7 +150,7 @@ function WorkflowColumn({ statusKey, posts }: { statusKey: StatusKey; posts: Pos
 
             {/* Empty state */}
             {posts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 p-8 bg-white border border-dashed border-gray-100 rounded-2xl text-center">
+                <div className="flex flex-col items-center justify-center gap-2 p-8 bg-card border border-dashed border-card-border rounded-2xl text-center">
                     <Icon className="w-6 h-6 text-gray-200" />
                     <p className="text-xs font-semibold text-gray-300">{cfg.label}の投稿なし</p>
                 </div>
@@ -166,8 +166,8 @@ function WorkflowColumn({ statusKey, posts }: { statusKey: StatusKey; posts: Pos
                                 onClick={() => setOlderOpen(prev => !prev)}
                                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all ${
                                     olderOpen
-                                        ? 'bg-gray-100 border-gray-200 text-gray-600'
-                                        : 'bg-white border-gray-100 text-gray-400 hover:bg-gray-50 hover:text-gray-600 hover:border-gray-200'
+                                        ? 'bg-surface border-card-border text-muted-text'
+                                        : 'bg-card border-card-border text-muted-text/80 hover:bg-surface/80 dark:hover:bg-surface/50 hover:text-gray-600 hover:border-gray-200'
                                 }`}
                             >
                                 <span>過去の投稿を見る ({older.length}件)</span>
@@ -213,12 +213,7 @@ export default function WorkflowClient({ posts, insightsPromise }: WorkflowClien
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">投稿履歴</h1>
-                    <p className="text-gray-500 mt-1">
-                        {totalPosts > 0
-                            ? `全ステージ合計 ${totalPosts} 件の投稿`
-                            : '投稿がありません。最初の投稿を作成してください。'}
-                    </p>
+                    <h1 className="text-2xl font-bold text-foreground">投稿履歴</h1>
                 </div>
                 <Link
                     href="/create"
@@ -244,12 +239,12 @@ export default function WorkflowClient({ posts, insightsPromise }: WorkflowClien
             </div>
 
             {totalPosts === 0 ? (
-                <div className="bg-white rounded-2xl border-2 border-dashed border-gray-100 p-20 text-center">
+                <div className="bg-card rounded-2xl border-2 border-dashed border-card-border p-20 text-center">
                     <div className="w-14 h-14 instagram-gradient rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-gray-900/20">
                         <ListChecks className="w-7 h-7 text-white" />
                     </div>
-                    <p className="text-base font-bold text-gray-900">投稿履歴が空です</p>
-                    <p className="text-sm text-gray-400 mt-1 mb-6">最初の投稿を作成してここでトラッキングしましょう。</p>
+                    <p className="text-base font-bold text-foreground">投稿履歴が空です</p>
+                    <p className="text-sm text-muted-text/80 mt-1 mb-6">最初の投稿を作成してここでトラッキングしましょう。</p>
                     <Link
                         href="/create"
                         className="inline-flex items-center gap-2 px-6 py-3 instagram-gradient text-white rounded-xl font-bold shadow-lg shadow-gray-900/20 hover:opacity-90 transition-all duration-200 ease-out active:scale-95"

@@ -116,19 +116,19 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
             {/* Calendar Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">コンテンツカレンダー</h1>
+                    <h1 className="text-2xl font-bold text-foreground">コンテンツカレンダー</h1>
                 </div>
-                <div className="flex items-center gap-3 bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 bg-card p-1 rounded-xl shadow-sm border border-card-border">
                     <button
                         onClick={() => setWeekOffset(prev => prev - 1)}
-                        className="p-2 hover:bg-gray-50 rounded-lg transition-all duration-200 ease-out active:scale-95"
+                        className="p-2 hover:bg-surface/80 dark:hover:bg-surface/50 rounded-lg transition-all duration-200 ease-out active:scale-95"
                     >
                         <ChevronLeft className="w-4 h-4" />
                     </button>
                     <span className="text-sm font-bold px-2 whitespace-nowrap">{weekLabel}</span>
                     <button
                         onClick={() => setWeekOffset(prev => prev + 1)}
-                        className="p-2 hover:bg-gray-50 rounded-lg transition-all duration-200 ease-out active:scale-95"
+                        className="p-2 hover:bg-surface/80 dark:hover:bg-surface/50 rounded-lg transition-all duration-200 ease-out active:scale-95"
                     >
                         <ChevronRight className="w-4 h-4" />
                     </button>
@@ -141,11 +141,11 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                     const posts = getPostsForDay(day)
                     const isToday = day.fullDate.toDateString() === new Date().toDateString()
                     return (
-                        <div key={day.name} className={`bg-white rounded-2xl border shadow-sm flex flex-col min-h-[400px] ${isToday ? 'border-purple-200 ring-1 ring-purple-100' : 'border-gray-100'}`}>
+                        <div key={day.name} className={`bg-white rounded-2xl border shadow-sm flex flex-col min-h-[400px] ${isToday ? 'border-purple-200 ring-1 ring-purple-100' : 'border-card-border'}`}>
                             {/* Day Header */}
-                            <div className={`p-4 border-b ${isToday ? 'border-purple-50 bg-purple-50/30' : 'border-gray-50'}`}>
-                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{day.name}</p>
-                                <p className={`text-lg font-bold mt-0.5 ${isToday ? 'text-purple-700' : 'text-gray-900'}`}>{day.date}</p>
+                            <div className={`p-4 border-b ${isToday ? 'border-purple-50 bg-purple-50/30' : 'border-card-border'}`}>
+                                <p className="text-xs font-bold text-muted-text/80 uppercase tracking-widest">{day.name}</p>
+                                <p className={`text-lg font-bold mt-0.5 ${isToday ? 'text-purple-700' : 'text-foreground'}`}>{day.date}</p>
                                 {isToday && (
                                     <div className="mt-2 flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-lg w-fit">
                                         <span className="text-[10px] font-black uppercase tracking-wider">今日</span>
@@ -159,9 +159,9 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                                     <button
                                         key={schedule.id}
                                         onClick={() => setSelectedPost(schedule)}
-                                        className="w-full text-left bg-white rounded-xl border border-gray-100 shadow-sm p-2 hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out active:scale-[0.98] group overflow-hidden"
+                                        className="w-full text-left bg-card rounded-xl border border-card-border shadow-sm p-2 hover:border-purple-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ease-out active:scale-[0.98] group overflow-hidden"
                                     >
-                                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2 relative">
+                                        <div className="aspect-square rounded-lg overflow-hidden bg-surface mb-2 relative">
                                             <img
                                                 src={firstImageUrl(schedule.post.imageUrl)}
                                                 alt=""
@@ -175,10 +175,10 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                                             <div className={`text-[9px] font-bold uppercase tracking-wider mb-1 ${statusColor(schedule.status)}`}>
                                                 {statusLabel(schedule.status)}
                                             </div>
-                                            <p className="text-[11px] font-bold text-gray-900 line-clamp-1">
+                                            <p className="text-[11px] font-bold text-foreground line-clamp-1">
                                                 {schedule.post.caption || 'No caption'}
                                             </p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                            <p className="text-[10px] text-muted-text/80 mt-0.5">
                                                 {new Date(schedule.scheduledFor).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                             </p>
                                         </div>
@@ -187,7 +187,7 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
 
                                 <Link
                                     href="/create"
-                                    className="w-full py-3 border-2 border-dashed border-gray-100 rounded-xl flex items-center justify-center text-gray-300 hover:border-purple-200 hover:text-purple-300 transition-all duration-200 ease-out active:scale-95 mt-auto group"
+                                    className="w-full py-3 border-2 border-dashed border-card-border rounded-xl flex items-center justify-center text-gray-300 hover:border-purple-200 hover:text-purple-300 transition-all duration-200 ease-out active:scale-95 mt-auto group"
                                 >
                                     <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
                                 </Link>
@@ -204,47 +204,47 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                     onClick={() => setSelectedPost(null)}
                 >
                     <div
-                        className="w-full max-w-md bg-white h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col p-8"
+                        className="w-full max-w-md bg-card h-full shadow-2xl animate-in slide-in-from-right duration-500 flex flex-col p-8"
                         onClick={e => e.stopPropagation()}
                     >
                         <div className="flex items-center justify-between mb-8">
-                            <h2 className="text-xl font-bold text-gray-900">投稿詳細</h2>
-                            <button onClick={() => setSelectedPost(null)} className="p-2 hover:bg-gray-100 rounded-full transition-all duration-200 ease-out active:scale-95">
-                                <X className="w-5 h-5 text-gray-400" />
+                            <h2 className="text-xl font-bold text-foreground">投稿詳細</h2>
+                            <button onClick={() => setSelectedPost(null)} className="p-2 hover:bg-surface dark:hover:bg-surface/80 rounded-full transition-all duration-200 ease-out active:scale-95">
+                                <X className="w-5 h-5 text-muted-text/80" />
                             </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-8 no-scrollbar">
-                            <div className="aspect-square rounded-3xl bg-gray-100 overflow-hidden shadow-inner border border-gray-100">
+                            <div className="aspect-square rounded-3xl bg-surface overflow-hidden shadow-inner border border-card-border">
                                 <img src={firstImageUrl(selectedPost.post.imageUrl)} className="w-full h-full object-cover" alt="" />
                             </div>
 
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-none">アカウント</p>
-                                        <h3 className="text-lg font-bold text-gray-900 mt-2">
+                                        <p className="text-xs font-bold text-muted-text/80 uppercase tracking-widest leading-none">アカウント</p>
+                                        <h3 className="text-lg font-bold text-foreground mt-2">
                                             @{selectedPost.post.connectedAccount?.username || 'instagram'}
                                         </h3>
                                     </div>
-                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-xl">
+                                    <div className="flex items-center gap-2 px-3 py-1.5 bg-surface border border-card-border rounded-xl">
                                         <Instagram className="w-4 h-4 text-purple-600" />
-                                        <span className="text-xs font-bold text-gray-700">Instagram</span>
+                                        <span className="text-xs font-bold text-foreground/80">Instagram</span>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">ステータス</p>
+                                    <div className="p-4 bg-surface rounded-2xl border border-card-border">
+                                        <p className="text-[10px] font-bold text-muted-text/80 uppercase tracking-widest">ステータス</p>
                                         <p className={`text-sm font-bold mt-1 flex items-center gap-2 ${statusColor(selectedPost.status)}`}>
                                             <CheckCircle2 className="w-3.5 h-3.5" />
                                             {statusLabel(selectedPost.status)}
                                         </p>
                                     </div>
-                                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">予約日時</p>
-                                        <p className="text-sm font-bold text-gray-900 mt-1 flex items-center gap-2">
-                                            <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                    <div className="p-4 bg-surface rounded-2xl border border-card-border">
+                                        <p className="text-[10px] font-bold text-muted-text/80 uppercase tracking-widest">予約日時</p>
+                                        <p className="text-sm font-bold text-foreground mt-1 flex items-center gap-2">
+                                            <Clock className="w-3.5 h-3.5 text-muted-text/80" />
                                             {new Date(selectedPost.scheduledFor).toLocaleString('en-US', {
                                                 month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
                                             })}
@@ -254,8 +254,8 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
 
                                 {selectedPost.post.caption && (
                                     <div>
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">キャプション</p>
-                                        <p className="text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100 leading-relaxed italic">
+                                        <p className="text-[10px] font-bold text-muted-text/80 uppercase tracking-widest mb-3">キャプション</p>
+                                        <p className="text-sm text-muted-text bg-surface p-4 rounded-2xl border border-card-border leading-relaxed italic">
                                             &quot;{selectedPost.post.caption}&quot;
                                         </p>
                                     </div>
@@ -263,7 +263,7 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                             </div>
                         </div>
 
-                        <div className="pt-8 mt-auto border-t border-gray-100 grid grid-cols-2 gap-4">
+                        <div className="pt-8 mt-auto border-t border-card-border grid grid-cols-2 gap-4">
                             <Link
                                 href="/create"
                                 className="py-3 bg-purple-600 text-white rounded-xl font-bold shadow-lg shadow-purple-600/20 hover:shadow-xl hover:-translate-y-0.5 hover:bg-purple-700 transition-all duration-200 ease-out active:scale-95 text-center text-sm"
@@ -272,7 +272,7 @@ export default function CalendarClient({ schedules, weekOffset: initialOffset }:
                             </Link>
                             <button
                                 onClick={() => setSelectedPost(null)}
-                                className="py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all duration-200 ease-out active:scale-95 text-sm"
+                                className="py-3 bg-surface text-foreground/80 rounded-xl font-bold hover:bg-gray-200 transition-all duration-200 ease-out active:scale-95 text-sm"
                             >
                                 閉じる
                             </button>

@@ -42,7 +42,7 @@ export function MobilePreviewModal({
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-in fade-in" onClick={onClose}>
-            <div className="relative w-[393px] h-[852px] scale-[0.55] sm:scale-[0.65] origin-center bg-white rounded-[55px] shadow-[0_0_0_12px_#000,0_0_0_14px_#333,0_0_0_16px_#000,0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden ring-1 ring-white/10" onClick={e => e.stopPropagation()}>
+            <div className="relative w-[393px] h-[852px] scale-[0.55] sm:scale-[0.65] origin-center bg-card rounded-[55px] shadow-[0_0_0_12px_#000,0_0_0_14px_#333,0_0_0_16px_#000,0_40px_100px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden ring-1 ring-white/10" onClick={e => e.stopPropagation()}>
                 
                 {/* Hardware Details (Side buttons) */}
                 <div className="absolute top-[120px] -left-[14px] w-[3px] h-[32px] bg-[#111] rounded-l-md" />
@@ -51,7 +51,7 @@ export function MobilePreviewModal({
                 <div className="absolute top-[200px] -right-[14px] w-[3px] h-[96px] bg-[#111] rounded-r-md" />
 
                 {/* iPhone 17 Pro Dynamic Island fake */}
-                <div className="h-[44px] w-full flex justify-center pt-2.5 bg-white z-20 shrink-0 absolute top-0 left-0">
+                <div className="h-[44px] w-full flex justify-center pt-2.5 bg-card z-20 shrink-0 absolute top-0 left-0">
                     <div className="w-[120px] h-[35px] bg-black rounded-[20px] flex items-center px-3 justify-end shadow-inner relative">
                         <div className="w-3 h-3 rounded-full bg-black/90 border border-white/10 shadow-[inset_0_0_3px_rgba(255,255,255,0.2)] ml-auto relative">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-indigo-900 rounded-full blur-[1px]"></div>
@@ -60,27 +60,27 @@ export function MobilePreviewModal({
                 </div>
                 
                 {/* Header Spacer for Island */}
-                <div className="h-[54px] w-full bg-white shrink-0" />
+                <div className="h-[54px] w-full bg-card shrink-0" />
                 
                 {/* Header */}
-                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 shrink-0">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-card-border shrink-0">
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 p-[2px]">
-                            <div className="w-full h-full rounded-full bg-white border border-transparent overflow-hidden">
+                            <div className="w-full h-full rounded-full bg-card border border-transparent overflow-hidden">
                                 {(account && 'profilePictureUrl' in account && account.profilePictureUrl) ? (
                                     <img src={account.profilePictureUrl as string} className="w-full h-full object-cover" alt="" />
                                 ) : (
-                                    <Instagram className="w-full h-full p-1 text-gray-400" />
+                                    <Instagram className="w-full h-full p-1 text-muted-text/80" />
                                 )}
                             </div>
                         </div>
-                        <span className="text-xs font-bold text-gray-900">{account?.username || account?.pageId || 'username'}</span>
+                        <span className="text-xs font-bold text-foreground">{account?.username || account?.pageId || 'username'}</span>
                     </div>
-                    <span className="text-gray-900 font-bold tracking-widest text-xs">...</span>
+                    <span className="text-foreground font-bold tracking-widest text-xs">...</span>
                 </div>
 
                 {/* Media — carousel support */}
-                <div className="w-full aspect-square bg-gray-100 relative shrink-0 overflow-hidden">
+                <div className="w-full aspect-square bg-surface relative shrink-0 overflow-hidden">
                     {mediaItems.length > 0 && (() => {
                         const idx = Math.min(previewIndex, mediaItems.length - 1)
                         const item = mediaItems[idx]
@@ -120,18 +120,18 @@ export function MobilePreviewModal({
                 <div className="px-3 py-2 shrink-0">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex gap-4">
-                            <Heart className="w-6 h-6 text-gray-900" />
-                            <MessageSquare className="w-6 h-6 text-gray-900" />
-                            <Send className="w-6 h-6 text-gray-900" />
+                            <Heart className="w-6 h-6 text-foreground" />
+                            <MessageSquare className="w-6 h-6 text-foreground" />
+                            <Send className="w-6 h-6 text-foreground" />
                         </div>
-                        <Bookmark className="w-6 h-6 text-gray-900" />
+                        <Bookmark className="w-6 h-6 text-foreground" />
                     </div>
-                    <p className="text-xs font-bold text-gray-900 mb-1">0 likes</p>
+                    <p className="text-xs font-bold text-foreground mb-1">0 likes</p>
                 </div>
 
                 {/* Caption Scrollable Area */}
                 <div className="px-3 pb-6 flex-1 overflow-y-auto min-h-0">
-                    <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                    <p className="text-sm text-foreground whitespace-pre-wrap">
                         <span className="font-bold mr-2">{account?.username || account?.pageId || 'username'}</span>
                         {caption || 'キャプションがここに表示されます...'}
                     </p>

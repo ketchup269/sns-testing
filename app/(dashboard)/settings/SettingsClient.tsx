@@ -28,26 +28,22 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     return (
         <div className="w-full max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
-                    <Settings className="w-8 h-8 text-gray-400" />
-                    システム設定
-                </h1>
-                <p className="text-gray-500 mt-2">アカウントの設定、AIの挙動、および支払い情報の管理を行います。</p>
+                <h1 className="text-3xl font-bold text-foreground tracking-tight">システム設定</h1>
             </div>
 
             {/* AI Preferences */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-500" />
-                        <h2 className="text-lg font-bold text-gray-900">AI 使用レベルの設定</h2>
+                        <h2 className="text-lg font-bold text-foreground">AI 使用レベルの設定</h2>
                     </div>
                     {message && <span className="text-sm font-bold text-green-600 flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/>{message}</span>}
                 </div>
                 <div className="p-6">
                     <div className="space-y-4">
                         {AI_OPTIONS.map((opt) => (
-                            <label key={opt.id} className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${selectedAiOption === opt.id ? 'border-indigo-500 bg-indigo-50/30' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}>
+                            <label key={opt.id} className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${selectedAiOption === opt.id ? 'border-indigo-500 bg-indigo-50/30' : 'border-card-border hover:border-gray-300 hover:bg-surface/80 dark:hover:bg-surface/50'}`}>
                                 <div className="mt-0.5">
                                     <input 
                                         type="radio" 
@@ -59,8 +55,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                     />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className={`font-bold ${selectedAiOption === opt.id ? 'text-indigo-900' : 'text-gray-900'}`}>{opt.label}</h3>
-                                    <p className="text-sm text-gray-500 mt-1">{opt.desc}</p>
+                                    <h3 className={`font-bold ${selectedAiOption === opt.id ? 'text-indigo-900' : 'text-foreground'}`}>{opt.label}</h3>
+                                    <p className="text-sm text-muted-text mt-1">{opt.desc}</p>
                                 </div>
                             </label>
                         ))}
@@ -78,34 +74,34 @@ export default function SettingsClient({ user }: SettingsClientProps) {
             </div>
 
             {/* Payments / Billing Mockup */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 text-emerald-500" />
-                        <h2 className="text-lg font-bold text-gray-900">お支払い情報</h2>
+                        <h2 className="text-lg font-bold text-foreground">お支払い情報</h2>
                     </div>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-lg border border-gray-200">今後のアップデートで実装予定</span>
+                    <span className="px-3 py-1 bg-surface text-muted-text text-xs font-bold rounded-lg border border-card-border">今後のアップデートで実装予定</span>
                 </div>
                 <div className="p-6 opacity-60 pointer-events-none select-none">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Current Plan */}
-                        <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
-                            <h3 className="text-sm font-bold text-gray-500 mb-1">現在のプラン</h3>
-                            <div className="text-2xl font-black text-gray-900 mb-4">フリープラン</div>
-                            <ul className="space-y-2 text-sm text-gray-600">
+                        <div className="border border-card-border rounded-xl p-5 bg-gray-50/50">
+                            <h3 className="text-sm font-bold text-muted-text mb-1">現在のプラン</h3>
+                            <div className="text-2xl font-black text-foreground mb-4">フリープラン</div>
+                            <ul className="space-y-2 text-sm text-muted-text">
                                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500"/> 月間 20投稿</li>
                                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500"/> 基本的なAI機能</li>
-                                <li className="flex items-center gap-2 text-gray-400"><AlertCircle className="w-4 h-4"/> チームメンバー追加制限</li>
+                                <li className="flex items-center gap-2 text-muted-text/80"><AlertCircle className="w-4 h-4"/> チームメンバー追加制限</li>
                             </ul>
-                            <button className="mt-6 w-full py-2 bg-white border border-gray-200 rounded-lg font-bold text-gray-400">プランをアップグレード</button>
+                            <button className="mt-6 w-full py-2 bg-card border border-card-border rounded-lg font-bold text-muted-text/80">プランをアップグレード</button>
                         </div>
                         
                         {/* Selected Payment Method */}
-                        <div className="border border-gray-200 rounded-xl p-5 bg-gray-50/50">
-                            <h3 className="text-sm font-bold text-gray-500 mb-4">登録済みのカード</h3>
-                            <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-200 rounded-xl bg-white">
+                        <div className="border border-card-border rounded-xl p-5 bg-gray-50/50">
+                            <h3 className="text-sm font-bold text-muted-text mb-4">登録済みのカード</h3>
+                            <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-card-border rounded-xl bg-card">
                                 <CreditCard className="w-8 h-8 text-gray-300 mb-2" />
-                                <span className="text-sm font-bold text-gray-400">カード情報がありません</span>
+                                <span className="text-sm font-bold text-muted-text/80">カード情報がありません</span>
                             </div>
                         </div>
                     </div>

@@ -103,7 +103,7 @@ function KPIGrid({
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
             {kpis.map((kpi) => (
-                <div key={kpi.label} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out group overflow-hidden relative cursor-default">
+                <div key={kpi.label} className="bg-card p-6 rounded-2xl border border-card-border shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out group overflow-hidden relative cursor-default">
                     <div className={`absolute top-0 right-0 w-24 h-24 ${kpi.bg} rounded-full -mr-8 -mt-8 opacity-40 group-hover:scale-125 transition-transform duration-700 ease-out`} />
                     <div className="relative">
                         <div className="flex items-center justify-between mb-4">
@@ -117,9 +117,9 @@ function KPIGrid({
                                 </div>
                             )}
                         </div>
-                        <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
-                        <p className="text-3xl font-black text-gray-900 mt-1 tracking-tight">{kpi.value}</p>
-                        <p className="text-xs text-gray-400 mt-1.5">{kpi.sub}</p>
+                        <p className="text-sm font-medium text-muted-text">{kpi.label}</p>
+                        <p className="text-3xl font-black text-foreground mt-1 tracking-tight">{kpi.value}</p>
+                        <p className="text-xs text-muted-text/80 mt-1.5">{kpi.sub}</p>
                     </div>
                 </div>
             ))}
@@ -131,11 +131,11 @@ function KPIGridSkeleton() {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm animate-pulse">
-                    <div className="w-10 h-10 bg-gray-100 rounded-xl mb-4" />
-                    <div className="h-4 bg-gray-100 rounded w-1/2 mb-2" />
-                    <div className="h-8 bg-gray-100 rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                <div key={i} className="bg-card p-6 rounded-2xl border border-card-border shadow-sm animate-pulse">
+                    <div className="w-10 h-10 bg-surface rounded-xl mb-4" />
+                    <div className="h-4 bg-surface rounded w-1/2 mb-2" />
+                    <div className="h-8 bg-surface rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-surface rounded w-1/3" />
                 </div>
             ))}
         </div>
@@ -159,15 +159,15 @@ function Activities({
     ]
 
     return (
-        <div className="divide-y divide-gray-50 animate-in fade-in duration-500">
+        <div className="divide-y divide-card-border animate-in fade-in duration-500">
             {activities.map((activity) => (
                 <div key={activity.id} className="flex items-start gap-4 p-4 hover:bg-gray-50/50 transition-colors">
-                    <div className={`w-8 h-8 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0 mt-0.5`}>
+                    <div className={`w-8 h-8 rounded-full bg-surface border border-card-border flex items-center justify-center shrink-0 mt-0.5`}>
                         <activity.icon className={`w-4 h-4 ${activity.iconColor}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700">{activity.detail}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 font-medium">{activity.time}</p>
+                        <p className="text-sm text-foreground/80">{activity.detail}</p>
+                        <p className="text-xs text-muted-text/80 mt-0.5 font-medium">{activity.time}</p>
                     </div>
                 </div>
             ))}
@@ -177,13 +177,13 @@ function Activities({
 
 function ActivitiesSkeleton() {
     return (
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-card-border">
             {[1, 2].map(i => (
                 <div key={i} className="flex items-start gap-4 p-4 animate-pulse">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 shrink-0" />
+                    <div className="w-8 h-8 rounded-full bg-surface shrink-0" />
                     <div className="flex-1 min-w-0">
-                        <div className="h-4 bg-gray-100 rounded w-3/4 mb-2" />
-                        <div className="h-3 bg-gray-100 rounded w-1/4" />
+                        <div className="h-4 bg-surface rounded w-3/4 mb-2" />
+                        <div className="h-3 bg-surface rounded w-1/4" />
                     </div>
                 </div>
             ))}
@@ -207,15 +207,12 @@ export default function DashboardClient({
             {/* Greeting */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">ダッシュボード概要</h1>
-                    <p className="text-gray-500 font-medium mt-1">
-                        おかえりなさい、{userName || 'ユーザー'}さん！アカウントの状況をご確認ください。
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">ダッシュボード概要</h1>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-500">過去7日間</span>
-                    <button className="p-2 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 shadow-sm transition-all duration-200 ease-out active:scale-95 group">
-                        <MoreHorizontal className="w-4 h-4 text-gray-500 group-hover:text-gray-800" />
+                    <span className="text-sm font-medium text-muted-text">過去7日間</span>
+                    <button className="p-2 bg-card hover:bg-surface/80 dark:hover:bg-surface/50 rounded-lg border border-card-border shadow-sm transition-all duration-200 ease-out active:scale-95 group">
+                        <MoreHorizontal className="w-4 h-4 text-muted-text group-hover:text-gray-800" />
                     </button>
                 </div>
             </div>
@@ -230,16 +227,16 @@ export default function DashboardClient({
             </Suspense>
 
             {/* Performance Chart */}
-            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="bg-card p-8 rounded-2xl border border-card-border shadow-sm">
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h2 className="text-lg font-bold text-gray-900">パフォーマンス推移</h2>
-                        <p className="text-sm text-gray-500 mt-1">過去12日間の公開済み投稿のビュー数</p>
+                        <h2 className="text-lg font-bold text-foreground">パフォーマンス推移</h2>
+                        <p className="text-sm text-muted-text mt-1">過去12日間の公開済み投稿のビュー数</p>
                     </div>
                     <div className="flex items-center gap-4 text-xs font-bold">
                         <div className="flex items-center gap-2">
                             <span className="w-3 h-3 rounded-full bg-indigo-500" />
-                            <span className="text-gray-600 uppercase tracking-wider">ビュー</span>
+                            <span className="text-muted-text uppercase tracking-wider">ビュー</span>
                         </div>
                     </div>
                 </div>
@@ -252,7 +249,7 @@ export default function DashboardClient({
                                     <div className="w-full relative flex items-end justify-center h-full">
                                         <div
                                             style={{ height: `${heightPct}%` }}
-                                            className={`absolute bottom-0 w-full ${useRealData && day.views > 0 ? 'bg-indigo-500 group-hover:bg-indigo-600' : 'bg-gray-100'} rounded-t-sm transition-all duration-300`}
+                                            className={`absolute bottom-0 w-full ${useRealData && day.views > 0 ? 'bg-indigo-500 group-hover:bg-indigo-600' : 'bg-surface'} rounded-t-sm transition-all duration-300`}
                                         />
                                         {day.views > 0 && (
                                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 shadow-xl z-20 whitespace-nowrap">
@@ -268,7 +265,7 @@ export default function DashboardClient({
                 </div>
                 <div className="flex justify-between mt-4 px-0">
                     {chartData.map((day, i) => (
-                        <span key={i} className="text-[10px] font-bold text-gray-400 uppercase flex-1 text-center">{day.label}</span>
+                        <span key={i} className="text-[10px] font-bold text-muted-text/80 uppercase flex-1 text-center">{day.label}</span>
                     ))}
                 </div>
             </div>
@@ -276,28 +273,28 @@ export default function DashboardClient({
             {/* Bottom Grid */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {/* Upcoming Posts */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                    <div className="p-6 border-b border-gray-50">
-                        <h2 className="text-lg font-bold text-gray-900">近日公開予定</h2>
-                        <p className="text-sm text-gray-500 mt-1">次回予約済み投稿</p>
+                <div className="bg-card rounded-2xl border border-card-border shadow-sm">
+                    <div className="p-6 border-b border-card-border">
+                        <h2 className="text-lg font-bold text-foreground">近日公開予定</h2>
+                        <p className="text-sm text-muted-text mt-1">次回予約済み投稿</p>
                     </div>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-card-border">
                         {upcomingSchedules.length === 0 ? (
                             <div className="p-8 text-center">
                                 <Calendar className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-                                <p className="text-sm font-bold text-gray-400">予約投稿なし</p>
+                                <p className="text-sm font-bold text-muted-text/80">予約投稿なし</p>
                                 <Link href="/create" className="mt-3 inline-block text-xs font-bold text-indigo-600 hover:text-indigo-700">
                                     投稿を予約する →
                                 </Link>
                             </div>
                         ) : upcomingSchedules.map((s) => (
                             <div key={s.id} className="flex items-center gap-4 p-4 hover:bg-gray-50/50 transition-colors">
-                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 shrink-0">
+                                <div className="w-12 h-12 rounded-xl overflow-hidden bg-surface shrink-0">
                                     <img src={firstImageUrl(s.post.imageUrl)} alt="" className="w-full h-full object-cover" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-bold text-gray-900 truncate">{s.post.caption || 'キャプションなし'}</p>
-                                    <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                    <p className="text-sm font-bold text-foreground truncate">{s.post.caption || 'キャプションなし'}</p>
+                                    <p className="text-xs text-muted-text mt-0.5 flex items-center gap-1">
                                         <Calendar className="w-3 h-3" />
                                         {new Date(s.scheduledFor).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </p>
@@ -312,10 +309,10 @@ export default function DashboardClient({
                 </div>
 
             {/* Activity Feed */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-                <div className="p-6 border-b border-gray-50">
-                    <h2 className="text-lg font-bold text-gray-900">アクティビティ</h2>
-                    <p className="text-sm text-gray-500 mt-1">最近のシステムアクティビティ</p>
+            <div className="bg-card rounded-2xl border border-card-border shadow-sm">
+                <div className="p-6 border-b border-card-border">
+                    <h2 className="text-lg font-bold text-foreground">アクティビティ</h2>
+                    <p className="text-sm text-muted-text mt-1">最近のシステムアクティビティ</p>
                 </div>
                 <Suspense fallback={<ActivitiesSkeleton />}>
                     <Activities 
