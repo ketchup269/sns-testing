@@ -21,11 +21,6 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-purple-900/30 text-black dark:text-white transition-colors duration-300 relative overflow-hidden" >
-      
-      {/* ── Background Decorative Mark ── */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-[0.04] dark:opacity-[0.06] pointer-events-none -z-10 select-none md:w-[700px] md:h-[700px]">
-        <Image src="/images/gravia_mark.png" alt="" fill className="object-contain" priority />
-      </div>
 
       <AuthRedirectGuard />
 
