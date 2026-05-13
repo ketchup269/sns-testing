@@ -86,12 +86,12 @@ class MockResponse {
 // next/server imports the Web API Request at module initialization time.
 // We intercept the module and supply our own NextResponse implementation.
 jest.mock('next/server', () => {
-  function MockNextResponse(body, init) {
+  function MockNextResponse(this: any, body: unknown, init?: { status?: number; headers?: Record<string, string> }) {
     this.body = body
     this.init = init
     this.status = init?.status ?? 200
   }
-  MockNextResponse.json = (data, init) => {
+  MockNextResponse.json = (data: unknown, init?: { status?: number; headers?: Record<string, string> }) => {
     const status = init?.status ?? 200
     return {
       status,
@@ -100,7 +100,7 @@ jest.mock('next/server', () => {
       ok: status >= 200 && status < 300,
     }
   }
-  MockNextResponse.redirect = (url, status = 302) => {
+  MockNextResponse.redirect = (url: string, status = 302) => {
     return {
       status,
       headers: new Map([['Location', url]]),

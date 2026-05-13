@@ -24,8 +24,7 @@ async function consumeLibraryImage(libraryImageId: string | null): Promise<void>
     await prisma.projectImage.delete({ where: { id: libraryImageId } }).catch(() => {})
 }
 
-/* @testable */
-export function sleep(ms: number) {
+function sleep(ms: number) {
     if (process.env.NODE_ENV === 'test') return Promise.resolve()
     return new Promise<void>(resolve => setTimeout(resolve, ms))
 }
