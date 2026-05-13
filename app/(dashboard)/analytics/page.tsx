@@ -5,7 +5,8 @@ import AnalyticsClient from './AnalyticsClient'
 
 export const dynamic = 'force-dynamic'
 
-function get30DayActivityData(posts: { createdAt: Date; schedules: { status: string }[] }[]): ChartDataPoint[] {
+/* @testable */
+export function get30DayActivityData(posts: { createdAt: Date; schedules: { status: string }[] }[]): ChartDataPoint[] {
     const data: ChartDataPoint[] = []
     const now = new Date()
     now.setHours(0, 0, 0, 0)

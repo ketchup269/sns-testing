@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { use, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import {
     ListChecks, PlusCircle, Clock, CheckCircle2, FileText, XCircle,
     Instagram, Image as ImageIcon, Video, Calendar, Eye, Heart,
-    ChevronDown, ChevronUp, Trash2, AlertTriangle, Loader2
+    Trash2, AlertTriangle, Loader2, ChevronLeft, ChevronRight,
+    ChevronDown, ChevronUp
 } from 'lucide-react'
 
 /** Safely extract the first image URL from a plain URL or a serialized JSON array */
@@ -21,11 +22,11 @@ function firstImageUrl(imageUrl: string): string {
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 const statusConfig = {
-    DRAFT: { label: '下書き', color: 'text-muted-text', bg: 'bg-surface', border: 'border-card-border', dot: 'bg-gray-400', icon: FileText },
-    PENDING: { label: '予約済み', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', dot: 'bg-purple-500', icon: Clock },
-    PUBLISHED: { label: '公開済み', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100', dot: 'bg-green-500', icon: CheckCircle2 },
-    FAILED: { label: '失敗', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100', dot: 'bg-red-500', icon: XCircle },
-    PROCESSING: { label: '処理中', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', dot: 'bg-blue-500', icon: Clock },
+    DRAFT:      { label: '下書き',   color: 'text-muted-text',  bg: 'bg-surface',    border: 'border-card-border', dot: 'bg-gray-400',   icon: FileText,     pageParam: 'draft_page'     },
+    PENDING:    { label: '予約済み', color: 'text-purple-600',  bg: 'bg-purple-50',  border: 'border-purple-100',  dot: 'bg-purple-500', icon: Clock,        pageParam: 'pending_page'   },
+    PUBLISHED:  { label: '公開済み', color: 'text-green-600',   bg: 'bg-green-50',   border: 'border-green-100',   dot: 'bg-green-500',  icon: CheckCircle2, pageParam: 'published_page' },
+    FAILED:     { label: '失敗',     color: 'text-red-600',     bg: 'bg-red-50',     border: 'border-red-100',     dot: 'bg-red-500',    icon: XCircle,      pageParam: 'failed_page'    },
+    PROCESSING: { label: '処理中',   color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100',    dot: 'bg-blue-500',   icon: Clock,        pageParam: 'processing_page' },
 } as const
 
 type StatusKey = keyof typeof statusConfig
@@ -45,20 +46,19 @@ interface Post {
     saves: number
 }
 
-interface WorkflowClientProps {
+interface ColumnData {
     posts: Post[]
-    insightsPromise: Promise<Record<string, { likes: number; views: number }>>
     currentPage: number
     totalPages: number
+    totalCount: number
 }
 
-function getPostStatus(post: Post): StatusKey {
-    const latest = post.schedules[0]
-    if (!latest) return 'DRAFT'
-    return latest.status as StatusKey
+interface WorkflowClientProps {
+    columns: Record<'DRAFT' | 'PENDING' | 'PUBLISHED' | 'FAILED', ColumnData>
+    insightsPromise: Promise<Record<string, { likes: number; views: number }>>
 }
 
-const COLUMNS: StatusKey[] = ['DRAFT', 'PENDING', 'PUBLISHED', 'FAILED']
+const COLUMNS: ('DRAFT' | 'PENDING' | 'PUBLISHED' | 'FAILED')[] = ['DRAFT', 'PENDING', 'PUBLISHED', 'FAILED']
 const DELETABLE: StatusKey[] = ['DRAFT', 'PENDING', 'FAILED']
 
 // ─── Post Card ────────────────────────────────────────────────────────────────
@@ -78,34 +78,31 @@ function PostCard({
 
     return (
         <div className="bg-card rounded-2xl border border-card-border shadow-sm overflow-hidden group hover:border-purple-200 hover:shadow-md transition-all relative">
-            <div className="aspect-[4/3] relative overflow-hidden bg-surface">
-                {isVideo ? (
-                    <div className="w-full h-full bg-gray-900 flex items-center justify-center relative">
-                        <img src={firstImageUrl(post.imageUrl)} alt="" className="w-full h-full object-cover opacity-50" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur flex items-center justify-center">
-                                <Video className="w-5 h-5 text-white" />
-                            </div>
+            <div className={`aspect-[4/3] relative overflow-hidden ${isVideo ? 'bg-gray-900' : 'bg-surface'}`}>
+                <img
+                    src={firstImageUrl(post.imageUrl)}
+                    alt={post.caption || 'Post'}
+                    className={`w-full h-full object-cover transition-transform duration-700 ${
+                        isVideo ? 'opacity-50' : 'group-hover:scale-105'
+                    }`}
+                />
+                {isVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur flex items-center justify-center">
+                            <Video className="w-5 h-5 text-white" />
                         </div>
                     </div>
-                ) : (
-                    <img
-                        src={firstImageUrl(post.imageUrl)}
-                        alt={post.caption || 'Post'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
                 )}
                 {post.connectedAccount?.username && (
-                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg border border-white/20">
+                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg border border-white/20 pointer-events-none">
                         <Instagram className="w-2.5 h-2.5 text-white" />
                         <span className="text-[9px] font-bold text-white">@{post.connectedAccount.username}</span>
                     </div>
                 )}
-                <div className="absolute top-2 right-2 w-6 h-6 rounded-lg bg-black/40 backdrop-blur flex items-center justify-center border border-white/20">
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-lg bg-black/40 backdrop-blur flex items-center justify-center border border-white/20 pointer-events-none">
                     {isVideo ? <Video className="w-3 h-3 text-white" /> : <ImageIcon className="w-3 h-3 text-white" />}
                 </div>
 
-                {/* Delete button — visible on hover, only for deletable statuses */}
                 {canDelete && (
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDeleteRequest(post.id, post.caption) }}
@@ -210,23 +207,80 @@ function ConfirmDeleteModal({
     )
 }
 
+// ─── Column Paginator ─────────────────────────────────────────────────────────
+
+function PaginationLink({ href, disabled, children }: { href: string; disabled: boolean; children: React.ReactNode }) {
+    return (
+        <Link
+            href={href}
+            aria-disabled={disabled}
+            className={`flex items-center justify-center w-7 h-7 rounded-lg border border-card-border bg-card transition-colors ${
+                disabled
+                    ? 'opacity-30 pointer-events-none'
+                    : 'hover:bg-surface text-muted-text hover:border-gray-200'
+            }`}
+        >
+            {children}
+        </Link>
+    )
+}
+
+function ColumnPaginator({
+    statusKey,
+    currentPage,
+    totalPages,
+}: {
+    statusKey: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'FAILED'
+    currentPage: number
+    totalPages: number
+}) {
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const pageParam = statusConfig[statusKey].pageParam
+
+    function buildHref(page: number) {
+        const params = new URLSearchParams(searchParams.toString())
+        params.set(pageParam, String(page))
+        return `${pathname}?${params.toString()}`
+    }
+
+    if (totalPages <= 1) return null
+
+    return (
+        <div className="flex items-center justify-between px-1 pt-1">
+            <PaginationLink href={buildHref(currentPage - 1)} disabled={currentPage <= 1}>
+                <ChevronLeft className="w-3.5 h-3.5" />
+            </PaginationLink>
+
+            <span className="text-[10px] font-bold text-muted-text/70 tabular-nums">
+                {currentPage} / {totalPages}
+            </span>
+
+            <PaginationLink href={buildHref(currentPage + 1)} disabled={currentPage >= totalPages}>
+                <ChevronRight className="w-3.5 h-3.5" />
+            </PaginationLink>
+        </div>
+    )
+}
+
 // ─── Workflow Column ──────────────────────────────────────────────────────────
 
 function WorkflowColumn({
     statusKey,
-    posts,
+    columnData,
     onDeleteRequest,
 }: {
-    statusKey: StatusKey
-    posts: Post[]
+    statusKey: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'FAILED'
+    columnData: ColumnData
     onDeleteRequest: (id: string, caption: string | null) => void
 }) {
     const cfg = statusConfig[statusKey]
     const Icon = cfg.icon
+    const { posts, currentPage, totalPages, totalCount } = columnData
     const [olderOpen, setOlderOpen] = useState(false)
 
     const pinned = posts[0] ?? null
-    const older  = posts.slice(1)
+    const older = posts.slice(1)
 
     return (
         <div className="space-y-3">
@@ -236,7 +290,7 @@ function WorkflowColumn({
                     <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
                     <span className={`text-sm font-black uppercase tracking-wider ${cfg.color}`}>{cfg.label}</span>
                 </div>
-                <span className={`text-xs font-black ${cfg.color} bg-white/60 px-2 py-0.5 rounded-full`}>{posts.length}</span>
+                <span className={`text-xs font-black ${cfg.color} bg-white/60 px-2 py-0.5 rounded-full`}>{totalCount}</span>
             </div>
 
             {/* Empty state */}
@@ -247,30 +301,40 @@ function WorkflowColumn({
                 </div>
             ) : (
                 <div className="space-y-3">
+                    {/* Latest Post (Pinned) */}
                     {pinned && <PostCard post={pinned} statusKey={statusKey} onDeleteRequest={onDeleteRequest} />}
 
-                    {older.length > 0 && (
-                        <div>
+                    {/* Older Posts & Pagination Dropdown */}
+                    {(older.length > 0 || totalPages > 1) && (
+                        <div className="space-y-2">
                             <button
-                                onClick={() => setOlderOpen(prev => !prev)}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-bold transition-all ${
+                                onClick={() => setOlderOpen(!olderOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
                                     olderOpen
-                                        ? 'bg-surface border-card-border text-muted-text'
-                                        : 'bg-card border-card-border text-muted-text/80 hover:bg-surface/80 dark:hover:bg-surface/50 hover:text-gray-600 hover:border-gray-200'
+                                        ? 'bg-surface border-card-border text-muted-text shadow-inner'
+                                        : 'bg-card border-card-border text-muted-text/80 hover:bg-surface/80 hover:text-gray-600 hover:border-gray-200'
                                 }`}
                             >
-                                <span>過去の投稿を見る ({older.length}件)</span>
-                                {olderOpen
-                                    ? <ChevronUp className="w-3.5 h-3.5" />
-                                    : <ChevronDown className="w-3.5 h-3.5" />
-                                }
+                                <span>過去の投稿とページ移動</span>
+                                {olderOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                             </button>
 
                             {olderOpen && (
-                                <div className="mt-2 space-y-3 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-                                    {older.map(post => (
-                                        <PostCard key={post.id} post={post} statusKey={statusKey} onDeleteRequest={onDeleteRequest} />
-                                    ))}
+                                <div className="space-y-3 pt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                    <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1.5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                                        {older.map(post => (
+                                            <PostCard key={post.id} post={post} statusKey={statusKey} onDeleteRequest={onDeleteRequest} />
+                                        ))}
+                                    </div>
+
+                                    {/* Per-column pagination */}
+                                    <div className="pt-1 border-t border-gray-100/50">
+                                        <ColumnPaginator
+                                            statusKey={statusKey}
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                        />
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -283,23 +347,38 @@ function WorkflowColumn({
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function WorkflowClient({ posts, insightsPromise, currentPage, totalPages }: WorkflowClientProps) {
+function CreatePostButton({ label = "新しい投稿を作成", className = "" }: { label?: string; className?: string }) {
+    return (
+        <Link
+            href="/create"
+            className={`inline-flex items-center justify-center gap-2 px-6 py-3 instagram-gradient text-white rounded-xl font-bold shadow-lg shadow-gray-900/20 hover:opacity-90 transition-all duration-200 ease-out active:scale-95 hover:shadow-xl hover:-translate-y-0.5 ${className}`}
+        >
+            <PlusCircle className="w-4 h-4" />{label}
+        </Link>
+    )
+}
+
+export default function WorkflowClient({ columns, insightsPromise }: WorkflowClientProps) {
     const liveInsights = use(insightsPromise)
     const router = useRouter()
 
     const [confirmDelete, setConfirmDelete] = useState<{ id: string; caption: string | null } | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
 
-    const groups: Record<StatusKey, Post[]> = { DRAFT: [], PENDING: [], PUBLISHED: [], FAILED: [], PROCESSING: [] }
+    // Enrich published posts with live insights
+    const enrichedColumns = {
+        ...columns,
+        PUBLISHED: {
+            ...columns.PUBLISHED,
+            posts: columns.PUBLISHED.posts.map(p => ({
+                ...p,
+                likes: liveInsights[p.id]?.likes ?? p.likes,
+                views: liveInsights[p.id]?.views ?? p.views,
+            })),
+        },
+    }
 
-    const enrichedPosts = posts.map(p => ({
-        ...p,
-        likes: liveInsights[p.id]?.likes ?? p.likes,
-        views: liveInsights[p.id]?.views ?? p.views,
-    }))
-
-    for (const post of enrichedPosts) groups[getPostStatus(post)].push(post)
-    const totalPosts = enrichedPosts.length
+    const totalPosts = COLUMNS.reduce((sum, key) => sum + columns[key].totalCount, 0)
 
     const handleDeleteRequest = useCallback((id: string, caption: string | null) => {
         setConfirmDelete({ id, caption })
@@ -331,12 +410,7 @@ export default function WorkflowClient({ posts, insightsPromise, currentPage, to
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">投稿履歴</h1>
                 </div>
-                <Link
-                    href="/create"
-                    className="flex items-center gap-2 px-6 py-3 instagram-gradient text-white rounded-xl font-bold shadow-lg shadow-gray-900/20 hover:opacity-90 transition-all duration-200 ease-out active:scale-95 hover:shadow-xl hover:-translate-y-0.5 w-fit"
-                >
-                    <PlusCircle className="w-4 h-4" />新しい投稿を作成
-                </Link>
+                <CreatePostButton className="w-fit" />
             </div>
 
             {/* Summary Pills */}
@@ -348,7 +422,7 @@ export default function WorkflowClient({ posts, insightsPromise, currentPage, to
                         <div key={key} className={`flex items-center gap-2 px-4 py-2 ${cfg.bg} border ${cfg.border} rounded-xl`}>
                             <Icon className={`w-4 h-4 ${cfg.color}`} />
                             <span className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</span>
-                            <span className={`text-sm font-black ${cfg.color}`}>{groups[key].length}</span>
+                            <span className={`text-sm font-black ${cfg.color}`}>{columns[key].totalCount}</span>
                         </div>
                     )
                 })}
@@ -361,51 +435,18 @@ export default function WorkflowClient({ posts, insightsPromise, currentPage, to
                     </div>
                     <p className="text-base font-bold text-foreground">投稿履歴が空です</p>
                     <p className="text-sm text-muted-text/80 mt-1 mb-6">最初の投稿を作成してここでトラッキングしましょう。</p>
-                    <Link
-                        href="/create"
-                        className="inline-flex items-center gap-2 px-6 py-3 instagram-gradient text-white rounded-xl font-bold shadow-lg shadow-gray-900/20 hover:opacity-90 transition-all duration-200 ease-out active:scale-95"
-                    >
-                        <PlusCircle className="w-4 h-4" />投稿を作成
-                    </Link>
+                    <CreatePostButton label="投稿を作成" />
                 </div>
             ) : (
-                <div className="space-y-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-                        {COLUMNS.map((key) => (
-                            <WorkflowColumn key={key} statusKey={key} posts={groups[key]} onDeleteRequest={handleDeleteRequest} />
-                        ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-4 mt-8 pt-4">
-                            <Link
-                                href={`?page=${Math.max(1, currentPage - 1)}`}
-                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-card-border bg-card transition-colors ${
-                                    currentPage <= 1
-                                        ? 'opacity-50 pointer-events-none'
-                                        : 'text-muted-text/80 hover:bg-surface/80 hover:text-gray-600 hover:border-gray-200'
-                                }`}
-                                aria-disabled={currentPage <= 1}
-                            >
-                                前のページ
-                            </Link>
-                            <span className="text-sm font-bold text-muted-text">
-                                {currentPage} / {totalPages}
-                            </span>
-                            <Link
-                                href={`?page=${Math.min(totalPages, currentPage + 1)}`}
-                                className={`px-4 py-2 text-sm font-bold rounded-xl border border-card-border bg-card transition-colors ${
-                                    currentPage >= totalPages
-                                        ? 'opacity-50 pointer-events-none'
-                                        : 'text-muted-text/80 hover:bg-surface/80 hover:text-gray-600 hover:border-gray-200'
-                                }`}
-                                aria-disabled={currentPage >= totalPages}
-                            >
-                                次のページ
-                            </Link>
-                        </div>
-                    )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    {COLUMNS.map((key) => (
+                        <WorkflowColumn
+                            key={key}
+                            statusKey={key}
+                            columnData={enrichedColumns[key]}
+                            onDeleteRequest={handleDeleteRequest}
+                        />
+                    ))}
                 </div>
             )}
 

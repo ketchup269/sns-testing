@@ -37,7 +37,8 @@ interface CalendarClientProps {
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-function getWeekDays(offsetWeeks: number): WeekDay[] {
+/* @testable */
+export function getWeekDays(offsetWeeks: number): WeekDay[] {
     const now = new Date()
     const monday = new Date(now)
     monday.setDate(now.getDate() - ((now.getDay() + 6) % 7) + offsetWeeks * 7)
@@ -53,7 +54,8 @@ function getWeekDays(offsetWeeks: number): WeekDay[] {
     })
 }
 
-function statusColor(status: string) {
+/* @testable */
+export function statusColor(status: string) {
     switch (status) {
         case 'PUBLISHED': return 'text-green-600'
         case 'PENDING': return 'text-purple-600'
@@ -62,7 +64,8 @@ function statusColor(status: string) {
     }
 }
 
-function statusLabel(status: string) {
+/* @testable */
+export function statusLabel(status: string) {
     switch (status) {
         case 'PUBLISHED': return '公開済み'
         case 'PENDING': return '予約済み'
@@ -73,7 +76,8 @@ function statusLabel(status: string) {
 }
 
 /** Safely extract the first image URL from a plain URL or a serialized JSON array */
-function firstImageUrl(imageUrl: string): string {
+/* @testable */
+export function firstImageUrl(imageUrl: string): string {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('[')) {
         try { return JSON.parse(imageUrl)[0] ?? '' } catch { return '' }

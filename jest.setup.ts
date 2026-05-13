@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom'
+import { TextEncoder, TextDecoder } from 'util'
+
+global.TextEncoder = TextEncoder
+global.TextDecoder = TextDecoder as any
 
 // ─── Environment variables ─────────────────────────────────────────────────
 process.env.GEMINI_API_KEY = 'test-gemini-key'
@@ -82,24 +86,33 @@ class MockResponse {
 // next/server imports the Web API Request at module initialization time.
 // We intercept the module and supply our own NextResponse implementation.
 jest.mock('next/server', () => {
+  function MockNextResponse(this: any, body: unknown, init?: { status?: number; headers?: Record<string, string> }) {
+    this.body = body
+    this.init = init
+    this.status = init?.status ?? 200
+  }
+  MockNextResponse.json = (data: unknown, init?: { status?: number; headers?: Record<string, string> }) => {
+    const status = init?.status ?? 200
+    return {
+      status,
+      headers: new Map(Object.entries(init?.headers ?? {})),
+      json: async () => data,
+      ok: status >= 200 && status < 300,
+    }
+  }
+  MockNextResponse.redirect = (url: string, status = 302) => {
+    return {
+      status,
+      headers: new Map([['Location', url]]),
+      json: async () => null,
+    }
+  }
+  MockNextResponse.next = () => {
+    return { status: 200, json: async () => null }
+  }
+
   return {
-    NextResponse: {
-      json: (data: unknown, init?: { status?: number; headers?: Record<string, string> }) => {
-        const status = init?.status ?? 200
-        return {
-          status,
-          headers: new Map(Object.entries(init?.headers ?? {})),
-          json: async () => data,
-          ok: status >= 200 && status < 300,
-        }
-      },
-      redirect: (url: string, status = 302) => ({
-        status,
-        headers: new Map([['Location', url]]),
-        json: async () => null,
-      }),
-      next: () => ({ status: 200, json: async () => null }),
-    },
+    NextResponse: MockNextResponse,
   }
 })
 
@@ -128,4 +141,12 @@ jest.mock('next-auth/react', () => ({
     status: 'authenticated',
   })),
   SessionProvider: ({ children }: { children: unknown }) => children,
+}))
+
+// ─── Mock @/auth ──────────────────────────────────────────────────────────
+jest.mock('@/auth', () => ({
+  auth: jest.fn(),
+  handlers: { GET: jest.fn(), POST: jest.fn() },
+  signIn: jest.fn(),
+  signOut: jest.fn(),
 }))

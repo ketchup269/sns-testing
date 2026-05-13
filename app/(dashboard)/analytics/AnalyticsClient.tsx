@@ -21,13 +21,15 @@ interface AnalyticsClientProps {
     selectedProjectId: string
 }
 
-function formatNumber(n: number): string {
+/* @testable */
+export function formatNumber(n: number): string {
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K'
     return n.toString()
 }
 
 /** Safely extract the first image URL from a plain URL or a serialized JSON array */
-function firstImageUrl(imageUrl: string): string {
+/* @testable */
+export function firstImageUrl(imageUrl: string): string {
     if (!imageUrl) return ''
     if (imageUrl.startsWith('[')) {
         try { return JSON.parse(imageUrl)[0] ?? '' } catch { return '' }

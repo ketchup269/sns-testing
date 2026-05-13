@@ -1,10 +1,21 @@
 import { requirePageAuth } from '@/lib/auth.utils'
 import { prisma } from '@/lib/prisma'
+import { ScheduleStatus } from '@/lib/prisma-client/client'
 import { facebookService } from '@/lib/services/facebook.service'
-import { redirect } from 'next/navigation'
 import WorkflowClient from './WorkflowClient'
 
 export const dynamic = 'force-dynamic'
+
+const LIMIT = 8
+
+type StatusKey = 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'FAILED'
+
+const STATUS_PAGE_PARAMS: Record<StatusKey, string> = {
+    DRAFT:     'draft_page',
+    PENDING:   'pending_page',
+    PUBLISHED: 'published_page',
+    FAILED:    'failed_page',
+}
 
 interface Post {
     id: string
@@ -21,76 +32,129 @@ interface Post {
     saves: number
 }
 
+function parsePage(value: string | string[] | undefined): number {
+    const n = parseInt(typeof value === 'string' ? value : '1', 10)
+    return Math.max(1, isNaN(n) ? 1 : n)
+}
+
 function getPostStatus(post: Post): string {
-    const latest = post.schedules[0]
-    if (!latest) return 'DRAFT'
-    return latest.status
+    return post.schedules[0]?.status ?? 'DRAFT'
 }
 
 export default async function WorkflowPage({
-    searchParams
+    searchParams,
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-    const session = await requirePageAuth();
+    const session = await requirePageAuth()
     const userId = session.user.id
 
-    const params = await searchParams;
-    const pageParam = typeof params?.page === 'string' ? parseInt(params.page, 10) : 1;
-    const currentPage = Math.max(1, isNaN(pageParam) ? 1 : pageParam);
-    const limit = 15;
-    const skip = (currentPage - 1) * limit;
+    const params = await searchParams
 
-    const [totalPosts, postsData] = await Promise.all([
-        prisma.post.count({ where: { userId: userId } }),
-        prisma.post.findMany({
-            where: { userId: userId },
-            include: {
-                schedules: { orderBy: { createdAt: 'desc' }, take: 1 },
-                connectedAccount: { select: { username: true, pageAccessToken: true } },
-            },
-            orderBy: { createdAt: 'desc' },
-            skip,
-            take: limit,
+    // Resolve the current page for each column independently
+    const pages: Record<StatusKey, number> = {
+        DRAFT:     parsePage(params[STATUS_PAGE_PARAMS.DRAFT]),
+        PENDING:   parsePage(params[STATUS_PAGE_PARAMS.PENDING]),
+        PUBLISHED: parsePage(params[STATUS_PAGE_PARAMS.PUBLISHED]),
+        FAILED:    parsePage(params[STATUS_PAGE_PARAMS.FAILED]),
+    }
+
+    // Query each column in parallel: count + paginated posts
+    const statusKeys = Object.keys(pages) as StatusKey[]
+
+    const columnResults = await Promise.all(
+        statusKeys.map(async (status) => {
+            const page = pages[status]
+            const skip = (page - 1) * LIMIT
+
+            // DRAFT = posts with no schedule rows (DRAFT is a UI concept, not in ScheduleStatus enum)
+            // All other statuses use the Prisma ScheduleStatus enum
+            const whereClause =
+                status === 'DRAFT'
+                    ? {
+                          userId,
+                          schedules: { none: {} },
+                      }
+                    : {
+                          userId,
+                          schedules: { some: { status: ScheduleStatus[status] } },
+                      }
+
+            const [totalCount, posts] = await Promise.all([
+                prisma.post.count({ where: whereClause }),
+                prisma.post.findMany({
+                    where: whereClause,
+                    include: {
+                        schedules: { orderBy: { createdAt: 'desc' }, take: 1 },
+                        connectedAccount: { select: { username: true, pageAccessToken: true } },
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    skip,
+                    take: LIMIT,
+                }),
+            ])
+
+            return {
+                status,
+                data: {
+                    posts: posts as Post[],
+                    currentPage: page,
+                    totalPages: Math.max(1, Math.ceil(totalCount / LIMIT)),
+                    totalCount,
+                },
+            }
         })
-    ]);
-    
-    const posts = postsData as Post[];
-    const totalPages = Math.max(1, Math.ceil(totalPosts / limit));
+    )
 
+    const columns = Object.fromEntries(
+        columnResults.map(({ status, data }) => [status, data])
+    ) as Record<StatusKey, typeof columnResults[0]['data']>
+
+    // Enrich recently-published posts with live Instagram insights
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    // Enrich published posts with live insights
-    const toSync = posts.filter(p =>
-        getPostStatus(p) === 'PUBLISHED' &&
-        p.instagramMediaId &&
-        !p.instagramMediaId.startsWith('test_') &&
-        p.connectedAccount?.pageAccessToken &&
-        p.schedules[0] && new Date(p.schedules[0].scheduledFor) > sevenDaysAgo
+    const toSync = columns.PUBLISHED.posts.filter(
+        (p) =>
+            p.instagramMediaId &&
+            !p.instagramMediaId.startsWith('test_') &&
+            p.connectedAccount?.pageAccessToken &&
+            p.schedules[0] &&
+            new Date(p.schedules[0].scheduledFor) > sevenDaysAgo
     )
 
-    // Enrich published posts with live insights asynchronously
     const insightsPromise = (async () => {
-        const results: Record<string, { likes: number, views: number }> = {}
+        const results: Record<string, { likes: number; views: number }> = {}
         if (toSync.length > 0) {
-            await Promise.all(toSync.map(async (p) => {
-                try {
-                    const insights = await facebookService.getMediaInsights(p.instagramMediaId!, p.connectedAccount!.pageAccessToken!)
-                    if (insights) {
-                        results[p.id] = { likes: insights.likes, views: insights.views }
-                        prisma.post.update({
-                            where: { id: p.id },
-                            data: { likes: insights.likes, views: insights.views, reach: insights.reach, saves: insights.saves }
-                        }).catch(() => {})
+            await Promise.all(
+                toSync.map(async (p) => {
+                    try {
+                        const insights = await facebookService.getMediaInsights(
+                            p.instagramMediaId!,
+                            p.connectedAccount!.pageAccessToken!
+                        )
+                        if (insights) {
+                            results[p.id] = { likes: insights.likes, views: insights.views }
+                            prisma.post
+                                .update({
+                                    where: { id: p.id },
+                                    data: {
+                                        likes: insights.likes,
+                                        views: insights.views,
+                                        reach: insights.reach,
+                                        saves: insights.saves,
+                                    },
+                                })
+                                .catch(() => {})
+                        }
+                    } catch {
+                        // Silently ignore — don't block render
                     }
-                } catch {
-                    // Silently ignore — don't block
-                }
-            }))
+                })
+            )
         }
         return results
     })()
 
-    return <WorkflowClient posts={posts} insightsPromise={insightsPromise} currentPage={currentPage} totalPages={totalPages} />
+    return <WorkflowClient columns={columns} insightsPromise={insightsPromise} />
 }
