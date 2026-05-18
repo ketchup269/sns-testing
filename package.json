@@ -7,7 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "worker": "npx tsx -r dotenv/config scripts/cron-worker.ts",
     "postinstall": "prisma generate",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
