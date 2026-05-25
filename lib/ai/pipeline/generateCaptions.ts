@@ -128,6 +128,7 @@ export async function generateCaptions(input: PipelineInput): Promise<PipelineOu
         currentCaption: input.currentCaption,
         imageCount: imagesToAnalyze.length,
         aiUsageOption: input.aiUsageOption,
+        locale: input.locale,
     }, apiKey);
 
     console.log('═══════════════════════════════════════');

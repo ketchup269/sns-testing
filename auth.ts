@@ -1,6 +1,8 @@
 import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import CredentialsProvider from "next-auth/providers/credentials"
+import Google from "next-auth/providers/google"
+import Facebook from "next-auth/providers/facebook"
 import { compare } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { validateEmail } from "@/lib/validation"
@@ -9,8 +11,19 @@ import { authConfig } from "./auth.config"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
     ...authConfig,
+    trustHost: true,
     adapter: PrismaAdapter(prisma),
     providers: [
+        Google({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+            allowDangerousEmailAccountLinking: true,
+        }),
+        Facebook({
+            clientId: process.env.FACEBOOK_APP_ID!,
+            clientSecret: process.env.FACEBOOK_APP_SECRET!,
+            allowDangerousEmailAccountLinking: true,
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {

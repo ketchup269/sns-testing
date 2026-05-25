@@ -48,6 +48,8 @@ export interface PipelineInput {
     projectId?: string;
     /** AI usage mode (Normal AI Use, Slight AI, etc) */
     aiUsageOption?: string;
+    /** Current UI locale */
+    locale?: string;
 }
 
 export type PostType = 'single' | 'small-carousel' | 'story-carousel';
