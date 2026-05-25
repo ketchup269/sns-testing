@@ -1,4 +1,4 @@
-import { saveDraft, schedulePost, publishNow, getSignedUploadUrl, getProjectImageUploadUrl, registerProjectImages } from '@/app/(dashboard)/create/actions'
+import { saveDraft, schedulePost, publishNow, getSignedUploadUrl, getProjectImageUploadUrl, registerProjectImages } from '@/app/[locale]/(dashboard)/create/actions'
 import { prisma } from '@/lib/prisma'
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAuth } from '@/lib/auth.utils'

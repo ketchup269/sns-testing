@@ -5,8 +5,20 @@
  */
 
 import { renderHook, act } from '@testing-library/react'
-import { usePostGeneration } from '@/app/(dashboard)/create/hooks/usePostGeneration'
-import type { MediaItem } from '@/app/(dashboard)/create/types'
+import { usePostGeneration } from '@/app/[locale]/(dashboard)/create/hooks/usePostGeneration'
+import type { MediaItem } from '@/app/[locale]/(dashboard)/create/types'
+
+jest.mock('next-intl', () => ({
+    useLocale: () => 'ja',
+    useTranslations: () => (key: string) => {
+        const translations: any = {
+            'errorOccurred': 'エラーが発生しました。',
+            'settingsSaved': '設定を保存しました。',
+            'prepareImageFirst': 'キャプションを生成するには、まず画像を準備してください。'
+        }
+        return translations[key] || key
+    }
+}))
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

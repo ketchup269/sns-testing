@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Inter } from "next/font/google";
-import "./globals.css";
-import Providers from "./providers";
+import "../globals.css";
+import Providers from "../providers";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import { routing } from '@/i18n/routing';
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -23,17 +27,29 @@ export const metadata: Metadata = {
   description: "GraviaはAIを活用したInstagram運用プラットフォームです。キャプション自動生成・スケジュール管理・アナリティクスを一括で。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = await params;
+  
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+  
+  const messages = await getMessages();
+
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistMono.variable} ${inter.variable} antialiased`}
       >
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

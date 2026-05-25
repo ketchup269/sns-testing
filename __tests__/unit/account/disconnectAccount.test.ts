@@ -1,4 +1,4 @@
-import { disconnectAccount } from '@/app/(dashboard)/account/actions'
+import { disconnectAccount } from '@/app/[locale]/(dashboard)/account/actions'
 import { requireAuth } from '@/lib/auth.utils'
 import { AccountService } from '@/lib/services/account.service'
 import { revalidatePath } from 'next/cache'

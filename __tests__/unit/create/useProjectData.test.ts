@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react'
-import { useProjectData } from '@/app/(dashboard)/create/hooks/useProjectData'
-import { getProjectImageUploadUrl, registerProjectImages } from '@/app/(dashboard)/create/actions'
+import { useProjectData } from '@/app/[locale]/(dashboard)/create/hooks/useProjectData'
+import { getProjectImageUploadUrl, registerProjectImages } from '@/app/[locale]/(dashboard)/create/actions'
 
 global.fetch = jest.fn()
 const mockFetch = fetch as jest.Mock
 
-jest.mock('@/app/(dashboard)/create/actions', () => ({
+jest.mock('@/app/[locale]/(dashboard)/create/actions', () => ({
   getProjectImageUploadUrl: jest.fn(),
   registerProjectImages:    jest.fn(),
 }))

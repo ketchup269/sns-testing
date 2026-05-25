@@ -7,6 +7,7 @@ import { ChevronDown, Instagram, Menu, Sun, Moon } from 'lucide-react'
 import { useAccount } from './AccountContext'
 import { useSidebar } from './SidebarContext'
 import { useTheme } from './ThemeContext'
+import { LanguageSwitcher } from './LanguageSwitcher'
 
 interface TopbarProps {
     user?: {
@@ -46,6 +47,8 @@ export function Topbar({ user }: TopbarProps) {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-3 lg:gap-6">
+                <LanguageSwitcher />
+
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}

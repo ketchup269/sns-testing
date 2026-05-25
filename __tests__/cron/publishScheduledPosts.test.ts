@@ -19,7 +19,6 @@ const mockFetch = fetch as jest.Mock
 describe('Cron Job: publishScheduledPosts', () => {
     beforeEach(() => {
         jest.clearAllMocks()
-        process.env.NODE_ENV = 'test'
     })
 
     it('should process pending schedules and sync insights successfully', async () => {

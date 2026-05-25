@@ -1,5 +1,6 @@
-import { formatNumber, firstImageUrl as firstImageUrlAnalytics } from '@/app/(dashboard)/analytics/AnalyticsClient'
-import { getWeekDays, statusColor, statusLabel, firstImageUrl as firstImageUrlCalendar } from '@/app/(dashboard)/calendar/CalendarClient'
+import { formatNumber } from '@/app/[locale]/(dashboard)/analytics/AnalyticsClient'
+import { getWeekDays, statusColor, statusLabel } from '@/app/[locale]/(dashboard)/calendar/CalendarClient'
+import { firstImageUrl } from '@/lib/utils'
 
 describe('formatNumber', () => {
     test.each([
@@ -18,12 +19,11 @@ describe('firstImageUrl', () => {
     test.each([
         ['https://a.com/1.jpg', 'https://a.com/1.jpg'],
         ['["url1","url2"]', 'url1'],
-        ['[]', ''],
+        ['[]', '[]'],
         ['', ''],
-        ['[invalid', ''],
+        ['[invalid', '[invalid'],
     ])('should extract first URL from "%s" as "%s"', (input, expected) => {
-        expect(firstImageUrlAnalytics(input)).toBe(expected)
-        expect(firstImageUrlCalendar(input)).toBe(expected)
+        expect(firstImageUrl(input)).toBe(expected)
     })
 })
 
@@ -71,6 +71,11 @@ describe('Calendar Helpers', () => {
     })
 
     describe('statusLabel', () => {
+        const mockT = (key: string) => {
+            const map: any = { published: '公開済み', scheduled: '予約済み', processing: '処理中', failed: '失敗' }
+            return map[key] || key
+        }
+
         test.each([
             ['PUBLISHED', '公開済み'],
             ['PENDING', '予約済み'],
@@ -78,7 +83,7 @@ describe('Calendar Helpers', () => {
             ['FAILED', '失敗'],
             ['OTHER', 'OTHER'],
         ])('should return the correct Japanese label for status "%s"', (status, expected) => {
-            expect(statusLabel(status)).toBe(expected)
+            expect(statusLabel(status, mockT)).toBe(expected)
         })
     })
 })

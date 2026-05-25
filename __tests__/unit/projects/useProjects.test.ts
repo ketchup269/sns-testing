@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react'
-import { useProjects } from '@/app/(dashboard)/projects/hooks/useProjects'
+import { useProjects } from '@/app/[locale]/(dashboard)/projects/hooks/useProjects'
 
 const mockPush = jest.fn()
 const mockRefresh = jest.fn()

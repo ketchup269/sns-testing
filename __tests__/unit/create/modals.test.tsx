@@ -7,10 +7,10 @@
 
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { DraftSelectionModal } from '@/app/(dashboard)/create/components/DraftSelectionModal'
-import { HistorySelectionModal } from '@/app/(dashboard)/create/components/HistorySelectionModal'
-import { MobilePreviewModal } from '@/app/(dashboard)/create/components/MobilePreviewModal'
-import type { HistoryItem, ConnectedAccount, MediaItem } from '@/app/(dashboard)/create/types'
+import { DraftSelectionModal } from '@/app/[locale]/(dashboard)/create/components/DraftSelectionModal'
+import { HistorySelectionModal } from '@/app/[locale]/(dashboard)/create/components/HistorySelectionModal'
+import { MobilePreviewModal } from '@/app/[locale]/(dashboard)/create/components/MobilePreviewModal'
+import type { HistoryItem, ConnectedAccount, MediaItem } from '@/app/[locale]/(dashboard)/create/types'
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

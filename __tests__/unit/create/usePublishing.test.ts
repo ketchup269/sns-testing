@@ -1,8 +1,8 @@
 import { renderHook, act } from '@testing-library/react'
-import { usePublishing } from '@/app/(dashboard)/create/hooks/usePublishing'
-import { publishNow, schedulePost, saveDraft, getSignedUploadUrl } from '@/app/(dashboard)/create/actions'
+import { usePublishing } from '@/app/[locale]/(dashboard)/create/hooks/usePublishing'
+import { publishNow, schedulePost, saveDraft, getSignedUploadUrl } from '@/app/[locale]/(dashboard)/create/actions'
 
-jest.mock('@/app/(dashboard)/create/actions', () => ({
+jest.mock('@/app/[locale]/(dashboard)/create/actions', () => ({
   publishNow:          jest.fn(),
   schedulePost:        jest.fn(),
   saveDraft:           jest.fn(),

@@ -14,9 +14,9 @@ const sharedConfig = {
     '<rootDir>/node_modules/',
     '<rootDir>/scripts/',
   ],
-  // Allow ESM packages from next/upstash to be transformed
+  // Allow ESM packages from next/upstash/intl to be transformed
   transformIgnorePatterns: [
-    '/node_modules/(?!(lucide-react)/)',
+    '/node_modules/(?!(lucide-react|next-intl|use-intl|@formatjs|intl-messageformat)/)',
   ],
 }
 
