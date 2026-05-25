@@ -1,4 +1,4 @@
-import { updateAiUsageOption } from '@/app/(dashboard)/settings/actions'
+import { updateAiUsageOption } from '@/app/[locale]/(dashboard)/settings/actions'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/auth.utils'
 import { revalidatePath } from 'next/cache'

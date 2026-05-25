@@ -5,8 +5,8 @@
  */
 
 import { renderHook, act } from '@testing-library/react'
-import { useMediaManagement } from '@/app/(dashboard)/create/hooks/useMediaManagement'
-import type { HistoryItem, ProjectImage } from '@/app/(dashboard)/create/types'
+import { useMediaManagement } from '@/app/[locale]/(dashboard)/create/hooks/useMediaManagement'
+import type { HistoryItem, ProjectImage } from '@/app/[locale]/(dashboard)/create/types'
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 

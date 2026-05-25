@@ -17,16 +17,17 @@ import {
     FolderKanban
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
 
 const navigation = [
-    { name: 'ダッシュボード', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'コンテンツ作成', href: '/create', icon: PlusCircle },
-    { name: 'プロジェクト', href: '/projects', icon: FolderKanban },
-    { name: 'カレンダー', href: '/calendar', icon: Calendar },
-    { name: 'アナリティクス', href: '/analytics', icon: BarChart3 },
-    { name: '投稿履歴', href: '/workflow', icon: ListChecks },
-    { name: 'アカウント', href: '/account', icon: Instagram },
-    { name: '設定', href: '/settings', icon: Settings },
+    { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { key: 'create', href: '/create', icon: PlusCircle },
+    { key: 'projects', href: '/projects', icon: FolderKanban },
+    { key: 'calendar', href: '/calendar', icon: Calendar },
+    { key: 'analytics', href: '/analytics', icon: BarChart3 },
+    { key: 'workflow', href: '/workflow', icon: ListChecks },
+    { key: 'account', href: '/account', icon: Instagram },
+    { key: 'settings', href: '/settings', icon: Settings },
 ]
 
 interface SidebarProps {
@@ -42,6 +43,7 @@ import { useSidebar } from './SidebarContext'
 export function Sidebar({ user }: SidebarProps) {
     const pathname = usePathname()
     const { isOpen, closeSidebar } = useSidebar()
+    const t = useTranslations('Sidebar')
     
     const initials = user?.name
         ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
@@ -62,7 +64,7 @@ export function Sidebar({ user }: SidebarProps) {
             >
                 {/* Close Button / Mobile Header */}
                 <div className="h-16 flex items-center justify-between px-6 border-b border-card-border lg:hidden">
-                    <span className="font-bold text-foreground tracking-tight text-lg">Menu</span>
+                    <span className="font-bold text-foreground tracking-tight text-lg">{t('menu')}</span>
                     <button 
                         onClick={closeSidebar}
                         className="p-2 -mr-2 text-muted-text/80 hover:text-gray-600 hover:bg-surface/80 dark:hover:bg-surface/50 rounded-xl transition-colors"
@@ -77,19 +79,19 @@ export function Sidebar({ user }: SidebarProps) {
                     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
                     return (
                         <Link
-                            key={item.name}
+                            key={item.key}
                             href={item.href}
                             className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-out active:scale-[0.98] group relative ${isActive
                                 ? 'bg-purple-50 dark:bg-purple-900/20 text-foreground dark:text-white'
                                 : 'text-[#1E1B4B]/60 dark:text-white/60 hover:bg-surface/80 dark:hover:bg-surface/50 dark:hover:bg-white/5 hover:text-[#1E1B4B] dark:hover:text-white'
                                 } ${!isOpen ? 'lg:justify-center' : ''}`}
-                            title={!isOpen ? item.name : undefined}
+                            title={!isOpen ? t(item.key) : undefined}
                         >
                             <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-[#7C3AED] dark:text-purple-400' : 'text-[#1E1B4B]/40 dark:text-white/40 group-hover:text-[#1E1B4B]/70 dark:group-hover:text-white/70'
                                 }`} />
                             
                             <span className={`ml-3 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100 flex-1' : 'lg:hidden opacity-0 w-0'}`}>
-                                {item.name}
+                                {t(item.key)}
                             </span>
                             
                             {isActive && isOpen && <div className="w-1.5 h-1.5 rounded-full shrink-0 ml-auto" style={{background:'linear-gradient(135deg,#7C3AED,#EC4899,#F97316)'}} />}
@@ -101,13 +103,13 @@ export function Sidebar({ user }: SidebarProps) {
             {/* Bottom Section: Profile/Logout */}
             <div className={`p-4 border-t border-card-border ${!isOpen ? 'lg:p-2' : ''}`}>
                 <button
-                    onClick={() => signOut()}
+                    onClick={() => signOut({ callbackUrl: '/' })}
                     className={`w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium text-muted-text hover:bg-red-50 hover:text-red-700 transition-all duration-200 ease-out active:scale-[0.98] group ${!isOpen ? 'lg:px-0 lg:py-3' : ''}`}
-                    title={!isOpen ? 'ログアウト' : undefined}
+                    title={!isOpen ? t('logout') : undefined}
                 >
                     <LogOut className="w-5 h-5 shrink-0 text-muted-text/80 group-hover:text-red-500 transition-colors" />
                     <span className={`ml-3 whitespace-nowrap transition-all duration-200 ${isOpen ? 'opacity-100' : 'lg:hidden opacity-0 w-0'}`}>
-                        ログアウト
+                        {t('logout')}
                     </span>
                 </button>
 

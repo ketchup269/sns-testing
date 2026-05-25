@@ -1,4 +1,4 @@
-import { get30DayActivityData } from '@/app/(dashboard)/analytics/page'
+import { get30DayActivityData } from '@/app/[locale]/(dashboard)/analytics/page'
 
 describe('get30DayActivityData', () => {
     beforeEach(() => {

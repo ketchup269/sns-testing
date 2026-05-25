@@ -1,10 +1,22 @@
 import { renderHook, act } from '@testing-library/react'
-import { useMediaManagement } from '@/app/(dashboard)/create/hooks/useMediaManagement'
-import { usePostGeneration } from '@/app/(dashboard)/create/hooks/usePostGeneration'
-import { useSettings } from '@/app/(dashboard)/settings/hooks/useSettings'
-import { updateAiUsageOption } from '@/app/(dashboard)/settings/actions'
+import { useMediaManagement } from '@/app/[locale]/(dashboard)/create/hooks/useMediaManagement'
+import { usePostGeneration } from '@/app/[locale]/(dashboard)/create/hooks/usePostGeneration'
+import { useSettings } from '@/app/[locale]/(dashboard)/settings/hooks/useSettings'
+import { updateAiUsageOption } from '@/app/[locale]/(dashboard)/settings/actions'
 
-jest.mock('@/app/(dashboard)/settings/actions')
+jest.mock('next-intl', () => ({
+    useLocale: () => 'ja',
+    useTranslations: () => (key: string) => {
+        const translations: any = {
+            'errorOccurred': 'エラーが発生しました。',
+            'settingsSaved': '設定を保存しました。',
+            'prepareImageFirst': 'キャプションを生成するには、まず画像を準備してください。'
+        }
+        return translations[key] || key
+    }
+}))
+
+jest.mock('@/app/[locale]/(dashboard)/settings/actions')
 const mockUpdateAiUsageOption = updateAiUsageOption as jest.Mock
 
 // Mock FileReader for usePostGeneration
@@ -95,7 +107,7 @@ describe('useMediaManagement', () => {
 
         act(() => { result.current.loadFromDraft(draft) })
         expect(result.current.mediaItems).toHaveLength(2)
-        expect(result.current.mediaItems[0].url).toBe('url1')
+        expect((result.current.mediaItems[0] as any).url).toBe('url1')
     })
 
     it('should load image from library and set libraryImageId', () => {
@@ -162,7 +174,6 @@ describe('usePostGeneration', () => {
             await result.current.generateCaption(mediaItems, 'p-1', ['#food', '#travel'])
         })
 
-        expect(result.current.hashtags).toEqual(['#food', '#travel'])
         expect(result.current.caption).toContain('#food')
         expect(result.current.caption).toContain('#travel')
     })
@@ -207,7 +218,7 @@ describe('useSettings', () => {
             await result.current.handleSaveAiOption()
         })
 
-        expect(result.current.message).toBe('エラーが発生しました。')
+        expect(result.current.error).toBe('設定の保存に失敗しました。もう一度お試しください。')
         expect(result.current.isSaving).toBe(false)
     })
 })

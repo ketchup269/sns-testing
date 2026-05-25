@@ -1,4 +1,4 @@
-import { parseImageUrls, serializeImageUrls, isFileItem, isUrlItem, isVideoFile, isVideoUrl, isVideoItem } from '@/app/(dashboard)/create/types'
+import { parseImageUrls, serializeImageUrls, isFileItem, isUrlItem, isVideoFile, isVideoUrl, isVideoItem } from '@/app/[locale]/(dashboard)/create/types'
 
 describe('parseImageUrls', () => {
     test.each([
