@@ -15,6 +15,7 @@ export interface WriterContext {
     currentCaption?: string;
     imageCount: number;
     aiUsageOption?: string;
+    locale?: string;
 }
 
 /**
@@ -127,16 +128,21 @@ export async function runWriter(
     const isSlightAI = ctx.aiUsageOption === 'Slight AI' || ctx.aiUsageOption === 'Slight AI Use';
     const isNormalAI = ctx.aiUsageOption === 'Normal AI Use';
 
+    const isEnglish = ctx.locale === 'en';
+    const langInstructions = isEnglish
+        ? "出力はすべて英語（English）で書いてください。"
+        : "出力はすべて日本語で書いてください。";
+
     const systemInstruction = isSlightAI
-        ? "あなたは過去の投稿データのみに基づき、ユーザーの指示に沿って軽く調整を行うだけのアシスタントです。過度な創造性は控え、シンプルにまとめてください。"
+        ? (isEnglish ? "You are an assistant that makes slight adjustments to captions based strictly on past post data and user instructions. Keep it simple. Generate English output." : "あなたは過去の投稿データのみに基づき、ユーザーの指示に沿って軽く調整を行うだけのアシスタントです。過度な創造性は控え、シンプルにまとめてください。")
         : isNormalAI
-        ? "あなたはInstagramのコピーライターです。過度な装飾は避け、過去の分析データとプロジェクト設定を元に、自然で読みやすいキャプションを作成してください。"
-        : "あなたはInstagramの日本市場に特化したプロのコピーライターです。以下のコンテキストを元に、エンゲージメント率の高い魅力的なキャプションを作成してください。";
+        ? (isEnglish ? "You are an Instagram copywriter. Avoid excessive decorations, and create natural, easy-to-read English captions based on past analysis data and project settings." : "あなたはInstagramのコピーライターです。過度な装飾は避け、過去の分析データとプロジェクト設定を元に、自然で読みやすいキャプションを作成してください。")
+        : (isEnglish ? "You are a professional copywriter specialized in Instagram. Based on the following context, create an engaging English caption." : "あなたはInstagramの日本市場に特化したプロのコピーライターです。以下のコンテキストを元に、エンゲージメント率の高い魅力的なキャプションを作成してください。");
 
     const prompt = `${systemInstruction}
 以下のコンテキストを元に、キャプションを1つ作成してください。
 
-出力はすべて日本語で書いてください。
+${langInstructions}
 
 ═══════════════════════════════════════
 ${contextBlock}
@@ -157,7 +163,7 @@ ${isSlightAI ? '※ 画像の分析データが提供されていないため、
 
 出力形式（JSON）:
 {
-  "caption": "完成したキャプション（日本語）",
+  "caption": "完成したキャプション${isEnglish ? '（英語）' : '（日本語）'}",
   "hashtags": ["#ハッシュタグ1", "#ハッシュタグ2", "..."]
 }`;
 

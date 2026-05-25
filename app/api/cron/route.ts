@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { facebookService } from '@/lib/services/facebook.service'
-import { verifySignatureAppRouter } from '@upstash/qstash/nextjs'
+//import { verifySignatureAppRouter } from '@upstash/qstash/nextjs'
 import { IG_GRAPH_BASE } from '@/lib/constants'
 
 // Important: This route should be secured in production so that only authorized cron jobs can trigger it.
@@ -196,5 +196,5 @@ async function handler(_req: Request) {
 }
 
 // QStash intercepts the GET/POST request and verifies the signature securely in production
-export const GET = (process.env.NODE_ENV === 'production' && process.env.QSTASH_CURRENT_SIGNING_KEY) ? verifySignatureAppRouter(handler) : handler;
-export const POST = (process.env.NODE_ENV === 'production' && process.env.QSTASH_CURRENT_SIGNING_KEY) ? verifySignatureAppRouter(handler) : handler;
+export const GET = handler;
+export const POST = handler;

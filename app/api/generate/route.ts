@@ -23,6 +23,7 @@ export async function POST(req: Request) {
             customPrompt,
             currentCaption,
             projectId,
+            locale,
         } = body;
 
         // ── 1. Build image parts (support both new and legacy format) ────
@@ -119,6 +120,7 @@ export async function POST(req: Request) {
             userId,
             projectId: projectId || undefined,
             aiUsageOption,
+            locale,
         };
 
         const result = await generateCaptions(pipelineInput);

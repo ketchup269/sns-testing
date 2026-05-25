@@ -4,6 +4,15 @@ import { prisma } from '@/lib/prisma'
 import { hash } from 'bcryptjs'
 import { validateEmail, validatePassword, validateName } from '@/lib/validation'
 import { Prisma } from '@/lib/prisma-client/client'
+import { signIn as nextAuthSignIn } from '@/auth'
+
+export async function signInWithGoogle() {
+    await nextAuthSignIn('google', { redirectTo: '/dashboard' })
+}
+
+export async function signInWithFacebook() {
+    await nextAuthSignIn('facebook', { redirectTo: '/dashboard' })
+}
 
 export async function createUser(name: string, email: string, password: string) {
     try {
