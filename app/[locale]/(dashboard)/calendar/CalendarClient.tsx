@@ -6,7 +6,7 @@ import {
     ChevronLeft, ChevronRight, Instagram,
     Clock, Plus, X, CheckCircle2, Trash2, Loader2, AlertTriangle
 } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import { firstImageUrl } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 

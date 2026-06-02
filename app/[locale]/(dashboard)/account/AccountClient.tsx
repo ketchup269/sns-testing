@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import {
     Instagram, CheckCircle2, AlertCircle, Clock, ShieldCheck,
     RefreshCw, ChevronRight, UserCircle, LogOut, Check, MoreHorizontal,

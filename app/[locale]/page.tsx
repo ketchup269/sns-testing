@@ -1,23 +1,26 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { ArrowRight, Zap, BarChart3, ShieldCheck, Sparkles, Calendar, Brain } from 'lucide-react'
 import { AuthRedirectGuard } from '@/app/components/AuthRedirectGuard'
 import { LandingThemeToggle } from '@/app/components/LandingThemeToggle'
-
-const features = [
-  { icon: Brain,       title: 'AIキャプション生成',    desc: 'ブランドの声・トーン・CTAを学習したAIが、エンゲージメント率の高いキャプションを瞬時に生成。',    color: 'from-[#7C3AED] to-[#9333EA]' },
-  { icon: Calendar,    title: '最適時間に自動投稿',    desc: 'プロジェクトごとに推奨投稿時間を設定。ワンクリックでスケジュール確定、あとはGraviaにお任せ。', color: 'from-[#EC4899] to-[#F43F5E]' },
-  { icon: BarChart3,   title: '詳細アナリティクス',    desc: 'リーチ・保存数・エンゲージメント率をリアルタイムで追跡。データに基づいた成長戦略を。',         color: 'from-[#F97316] to-[#EAB308]' },
-  { icon: Zap,         title: 'ワークフロー管理',      desc: '下書き・予約・公開済みを一画面で管理。チーム全体の投稿状況を一目で把握できます。',             color: 'from-[#7C3AED] to-[#EC4899]' },
-  { icon: Sparkles,    title: 'プロジェクト別設定',    desc: '複数ブランドをプロジェクトごとに管理。トーン・CTA・ハッシュタグをプリセットして効率アップ。', color: 'from-[#EC4899] to-[#F97316]' },
-  { icon: ShieldCheck, title: '公式Meta API連携',      desc: '公式APIのみを使用。アカウントの安全性と利用規約への完全準拠を保証します。',                   color: 'from-[#7C3AED] to-[#F97316]' },
-]
+import { getTranslations } from 'next-intl/server'
 
 export default async function Home() {
   const session = await auth()
   if (session?.user?.id) redirect('/dashboard')
+  
+  const t = await getTranslations('HomePage')
+
+  const features = [
+    { icon: Brain,       title: t('features.aiCaption.title'),    desc: t('features.aiCaption.desc'),    color: 'from-[#7C3AED] to-[#9333EA]' },
+    { icon: Calendar,    title: t('features.autoPost.title'),     desc: t('features.autoPost.desc'), color: 'from-[#EC4899] to-[#F43F5E]' },
+    { icon: BarChart3,   title: t('features.analytics.title'),    desc: t('features.analytics.desc'),         color: 'from-[#F97316] to-[#EAB308]' },
+    { icon: Zap,         title: t('features.workflow.title'),      desc: t('features.workflow.desc'),             color: 'from-[#7C3AED] to-[#EC4899]' },
+    { icon: Sparkles,    title: t('features.projects.title'),    desc: t('features.projects.desc'), color: 'from-[#EC4899] to-[#F97316]' },
+    { icon: ShieldCheck, title: t('features.api.title'),      desc: t('features.api.desc'),                   color: 'from-[#7C3AED] to-[#F97316]' },
+  ]
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-purple-900/30 text-black dark:text-white transition-colors duration-300 relative overflow-hidden">
@@ -34,12 +37,12 @@ export default async function Home() {
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/signin" className="text-xs sm:text-sm font-bold text-muted-text/80 hover:text-black dark:text-slate-400 dark:hover:text-white transition-colors hidden sm:block">
-            サインイン
+            {t('signIn')}
           </Link>
           <Link href="/signup"
             className="px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white shadow-lg hover:opacity-90 active:scale-95 transition-all"
             style={{background:'linear-gradient(135deg,#7C3AED,#EC4899,#F97316)'}}>
-            無料で始める
+            {t('startFree')}
           </Link>
           <LandingThemeToggle />
         </div>
@@ -56,14 +59,14 @@ export default async function Home() {
         
         {/* Headline */}
         <h1 className="text-3xl sm:text-5xl md:text-7xl font-black leading-[1.08] mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-          <span className="text-black dark:text-white">AIでインスタ運用を</span><br />
+          <span className="text-black dark:text-white">{t('heroTitle1')}</span><br />
           <span className="bg-gradient-to-r from-[#7C3AED] via-[#EC4899] to-[#F97316] bg-clip-text text-transparent">
-            もっと楽に、もっと伸ばす。
+            {t('heroTitle2')}
           </span>
         </h1>
 
         <p className="text-sm sm:text-lg md:text-xl text-muted-text dark:text-slate-400 mb-8 sm:mb-12 max-w-2xl leading-relaxed animate-in fade-in slide-in-from-bottom-12 duration-700 delay-200">
-          Graviaはブランドのトーンを学習し、最適なキャプション・ハッシュタグ・CTAを自動生成。あとはワンクリックでスケジュール完了。
+          {t('heroDesc')}
         </p>
 
         {/* CTAs */}
@@ -71,12 +74,12 @@ export default async function Home() {
           <Link href="/signup"
             className="group w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-black text-base sm:text-lg text-white shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
             style={{background:'linear-gradient(135deg,#7C3AED,#EC4899,#F97316)', boxShadow:'0 8px 32px rgba(124,58,237,0.25)'}}>
-            無料で始める
+            {t('startFree')}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link href="/signin"
             className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-2xl font-bold text-base sm:text-lg text-center text-foreground/80 border-2 border-slate-200 bg-card dark:bg-transparent dark:text-slate-300 dark:border-slate-800 transition-all hover:border-purple-500 hover:text-purple-600 dark:hover:border-purple-500/50 dark:hover:text-white">
-            サインイン
+            {t('signIn')}
           </Link>
         </div>
 
@@ -103,12 +106,13 @@ export default async function Home() {
             Gravia
           </span>
         </div>
-        <p className="text-xs font-semibold text-muted-text dark:text-slate-400">AIでインスタ運用を、もっと楽に、もっと伸ばす。</p>
+        <p className="text-xs font-semibold text-muted-text dark:text-slate-400">{t('footerDesc')}</p>
         <div className="flex justify-center gap-4 mt-3 mb-2">
-          <Link href="/terms" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">利用規約</Link>
-          <Link href="/privacy" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">プライバシーポリシー</Link>
+          <Link href="/terms" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('terms')}</Link>
+          <Link href="/privacy" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('privacy')}</Link>
+          <Link href="/data-deletion" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('dataDeletion')}</Link>
         </div>
-        <p className="text-xs text-muted-text dark:text-slate-500 mt-1">© 2026 Gravia. All rights reserved.</p>
+        <p className="text-xs text-muted-text dark:text-slate-500 mt-1">{t('copyright')}</p>
       </footer>
     </div>
   )
