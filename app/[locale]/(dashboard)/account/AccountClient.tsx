@@ -78,9 +78,9 @@ export default function AccountClient({ connectedAccounts, error, success }: Acc
                         <p className="text-sm text-muted-text mt-1 max-w-md">{t('connectFacebookDesc')}</p>
                     </div>
                 </div>
-                <Link href="/api/auth/facebook" className="w-full md:w-auto px-8 py-3.5 bg-[#1877F2] text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:-translate-y-0.5 hover:bg-[#166FE5] transition-all duration-200 ease-out active:scale-95 text-center shrink-0">
+                <a href="/api/auth/facebook" className="w-full md:w-auto px-8 py-3.5 bg-[#1877F2] text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:-translate-y-0.5 hover:bg-[#166FE5] transition-all duration-200 ease-out active:scale-95 text-center shrink-0">
                     {t('connectButton')}
-                </Link>
+                </a>
             </div>
 
             {/* Connected Accounts */}
