@@ -53,10 +53,10 @@ export const facebookService = {
             client_id: FACEBOOK_APP_ID,
             redirect_uri: redirectUri,
             state: state,
-            scope: 'pages_show_list,instagram_basic,instagram_content_publish,pages_read_engagement',
+            scope: 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
             response_type: 'code',
         })
-        return `https://www.facebook.com/v19.0/dialog/oauth?${params.toString()}`
+        return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`
     },
     /**
      * Exchange the short-lived authorization code for a short-lived access token
