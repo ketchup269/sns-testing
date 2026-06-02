@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { createUser } from '@/app/actions/auth'
 import { checkPasswordStrength, isPasswordStrong, type PasswordStrength } from '@/lib/validation'

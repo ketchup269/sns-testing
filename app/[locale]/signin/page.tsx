@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { validateEmail } from '@/lib/validation'
 import { Loader2, ArrowLeft, ChevronDown } from 'lucide-react'

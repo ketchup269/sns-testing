@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { ChevronDown, Instagram, Menu, Sun, Moon } from 'lucide-react'
 import { useAccount } from './AccountContext'

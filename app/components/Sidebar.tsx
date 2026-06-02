@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
@@ -102,6 +102,13 @@ export function Sidebar({ user }: SidebarProps) {
 
             {/* Bottom Section: Profile/Logout */}
             <div className={`p-4 border-t border-card-border ${!isOpen ? 'lg:p-2' : ''}`}>
+                <div className={`flex flex-wrap justify-center gap-x-3 gap-y-1 mb-4 text-[10px] text-muted-text/60 transition-all duration-200 ${isOpen ? 'opacity-100' : 'lg:hidden opacity-0 h-0 overflow-hidden mb-0'}`}>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">{t('terms')}</Link>
+                    <span>&bull;</span>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">{t('privacy')}</Link>
+                    <span>&bull;</span>
+                    <Link href="/data-deletion" className="hover:text-foreground transition-colors">{t('dataDeletion')}</Link>
+                </div>
                 <button
                     onClick={() => signOut({ callbackUrl: '/' })}
                     className={`w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium text-muted-text hover:bg-red-50 hover:text-red-700 transition-all duration-200 ease-out active:scale-[0.98] group ${!isOpen ? 'lg:px-0 lg:py-3' : ''}`}

@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import {
     Eye, Heart, PlayCircle, CheckCircle2, Users,
     ArrowUpRight, MoreHorizontal, Calendar
