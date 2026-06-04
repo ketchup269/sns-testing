@@ -182,7 +182,7 @@ export default function SignUp() {
 
             <div className="w-full max-w-[420px] bg-white dark:bg-white/[0.03] rounded-[2rem] border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-2xl shadow-purple-500/5 dark:shadow-purple-500/5 relative z-10 my-8 sm:my-12">
                 <div className="flex flex-col items-center text-center mb-6 sm:mb-8">
-                    <Image src="/images/gravia_mark.png" alt="Gravia" width={48} height={48} className="mb-3 sm:w-14 sm:h-14" />
+                    <Image src="/images/gravia_mark.png" alt="Gravia" width={48} height={48} className="mb-3 sm:w-14 sm:h-12.5" />
                     <Image src="/images/gravia_text.png" alt="Gravia" width={100} height={30} className="object-contain mb-3 sm:mb-4" />
                     <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">アカウント作成</h1>
                     <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">ソーシャルアカウントで簡単に登録</p>
