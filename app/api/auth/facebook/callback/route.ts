@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error: any) {
         console.error('Callback processing error:', error)
-        
+
         const errorMessage = error.message
         if (['no_pages_found', 'no_ig_business_found'].includes(errorMessage)) {
             return NextResponse.redirect(new URL(`/account?error=${errorMessage}`, appUrl))
