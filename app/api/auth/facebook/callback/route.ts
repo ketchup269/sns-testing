@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state')
     const error = searchParams.get('error')
 
-    const appUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
 
     if (error) {
         console.error('Facebook Auth Error:', error)
