@@ -30,9 +30,9 @@ export default async function Home() {
       {/* ── Header ── */}
       <header className="h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <Image src="/images/gravia_mark.png" alt="Gravia" width={32} height={32} className="rounded-lg sm:w-10 sm:h-9" />
+          <Image src="/images/gravia_mark.png" alt="Gravia" width={40} height={32} />
           <span>
-            <Image src="/images/gravia_text.png" alt="Gravia" width={40} height={39} className="sm:w-20 sm:h-5" />
+            <Image src="/images/gravia_text.png" alt="Gravia" width={69} height={39} />
           </span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
