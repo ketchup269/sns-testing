@@ -23,18 +23,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clientId: process.env.FACEBOOK_APP_ID!,
             clientSecret: process.env.FACEBOOK_APP_SECRET!,
             allowDangerousEmailAccountLinking: true,
+            // instagram_basic was shut down by Meta on Dec 4, 2024 (EOL).
+            // Other Instagram scopes require App Review — handle in a separate
+            // post-login "Connect Instagram Account" flow.
             authorization: {
                 params: {
-                    scope: [
-                        "public_profile",
-                        "instagram_basic",
-                        "instagram_content_publish",
-                        "instagram_manage_insights",
-                        "instagram_manage_comments",
-                        "instagram_manage_messages",
-                        "pages_show_list",
-                        "pages_read_engagement",
-                    ].join(","),
+                    scope: "public_profile,email",
                 },
             },
             profile(profile) {
