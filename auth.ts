@@ -23,6 +23,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             clientId: process.env.FACEBOOK_APP_ID!,
             clientSecret: process.env.FACEBOOK_APP_SECRET!,
             allowDangerousEmailAccountLinking: true,
+            authorization: {
+                params: {
+                    scope: [
+                        "public_profile",
+                        "instagram_basic",
+                        "instagram_content_publish",
+                        "instagram_manage_insights",
+                        "instagram_manage_comments",
+                        "instagram_manage_messages",
+                        "pages_show_list",
+                        "pages_read_engagement",
+                    ].join(","),
+                },
+            },
+            profile(profile) {
+                return {
+                    id: profile.id,
+                    name: profile.name,
+                    email: profile.email || `${profile.id}@facebook.com`,
+                    image: profile.picture?.data?.url,
+                }
+            }
         }),
         CredentialsProvider({
             name: "Credentials",
