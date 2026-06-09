@@ -199,36 +199,7 @@ export default function AccountClient({ connectedAccounts, error, success }: Acc
                     </button>
                 </div>
 
-                <div className="bg-card rounded-[2.5rem] border border-card-border p-10 shadow-sm">
-                    <div className="mb-10">
-                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em] bg-blue-50 dark:bg-blue-500/20 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-500/30">{t('prerequisites')}</span>
-                        <h3 className="text-2xl font-bold text-foreground mt-4">{t('apiCompatibility')}</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {[
-                            { title: t('req1Title'), label: t('req1Label'), icon: ShieldCheck, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
-                            { title: t('req2Title'), label: t('req2Label'), icon: LinkIcon, color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-500/10' },
-                            { title: t('req3Title'), label: t('req3Label'), icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-500/10' },
-                            { title: t('req4Title'), label: t('req4Label'), icon: Check, color: 'text-pink-500', bg: 'bg-pink-50 dark:bg-pink-500/10' },
-                        ].map((req) => (
-                            <div key={req.title} className="p-6 rounded-3xl border border-card-border bg-gray-50/50 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 hover:shadow-md hover:border-blue-100 dark:hover:border-blue-500/30 transition-all group">
-                                <div className={`w-10 h-10 ${req.bg} rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110`}>
-                                    <req.icon className={`w-5 h-5 ${req.color}`} />
-                                </div>
-                                <h4 className="text-sm font-bold text-foreground">{req.title}</h4>
-                                <p className="text-[10px] font-bold text-muted-text/80 mt-1 uppercase tracking-widest">{req.label}</p>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-10 p-5 bg-orange-50 dark:bg-orange-500/10 rounded-2xl border border-orange-100 dark:border-orange-500/20 flex items-start gap-4">
-                        <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-                        <div>
-                            <p className="text-xs font-bold text-orange-900 dark:text-orange-400">{t('personalAccountsNotSupported')}</p>
-                            <p className="text-xs text-orange-700 dark:text-orange-300 mt-1 leading-relaxed">{t('personalAccountsNotSupportedDesc')}</p>
-                        </div>
-                    </div>
                 </div>
-            </div>
 
             <ConfirmModal
                 isOpen={!!disconnectId}
