@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { IG_GRAPH_BASE } from '@/lib/constants'
+// import { IG_GRAPH_BASE } from '@/lib/constants'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 async function generateAiDmReply(
@@ -169,11 +169,11 @@ async function processDueEvents(): Promise<{
         where: { id: event.id },
         data: { status: 'DONE', processedAt: new Date() }
       })
-    } catch (err: any) {
+    } catch (error: unknown) {
       failed++
       await prisma.automationEvent.update({
         where: { id: event.id },
-        data: { status: 'FAILED', error: err.message }
+        data: { status: 'FAILED', error: error instanceof Error ? error.message : 'Unknown error' }
       })
     }
   }

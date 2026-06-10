@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 import { IG_GRAPH_BASE } from '@/lib/constants'
 
 export class FacebookApiError extends Error {
@@ -72,7 +72,7 @@ export const facebookService = {
                 }
             })
             return response.data.access_token
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[FacebookService] Failed to exchange code for token:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -102,7 +102,7 @@ export const facebookService = {
                 }
             })
             return response.data
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[FacebookService] Failed to exchange for long-lived token:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -126,7 +126,7 @@ export const facebookService = {
                 }
             })
             return response.data
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[FacebookService] Failed to fetch user profile:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -150,7 +150,7 @@ export const facebookService = {
                 }
             })
             return response.data.data as FacebookPage[]
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('[FacebookService] Failed to fetch user pages:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -179,7 +179,7 @@ export const facebookService = {
                 return response.data.instagram_business_account
             }
             return null
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`[FacebookService] Failed to check IG Business Account for page ${pageId}:`, error.response?.data || error.message)
             const fbError = error.response?.data?.error
             if (fbError && (fbError.code === 10 || fbError.code === 190)) {
@@ -238,7 +238,7 @@ export const facebookService = {
             }
 
             return { views, reach, saves, likes }
-        } catch (error: any) {
+        } catch (error: unknown) {
             const fbError = error.response?.data?.error
             if (fbError?.code === 100 && fbError?.error_subcode === 33) {
                 // Media likely deleted on Instagram or unsupported media type (e.g., expired story)
@@ -307,7 +307,7 @@ export const facebookService = {
             }
 
             return { totalImpressions, totalLikes }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`[FacebookService] Failed to fetch account insights for ${igBusinessId}:`, error.response?.data || error.message)
             return null
         }
@@ -325,7 +325,7 @@ export const facebookService = {
                 }
             })
             return response.data.followers_count || 0
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(`[FacebookService] Failed to fetch followers for ${igBusinessId}:`, error.response?.data || error.message)
             return null
         }

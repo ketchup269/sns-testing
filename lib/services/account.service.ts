@@ -10,7 +10,7 @@ export class AccountService {
             await prisma.connectedAccount.delete({
                 where: { id: accountId, userId }
             })
-        } catch (error: any) {
+        } catch {
             throw new Error('Failed to disconnect account')
         }
     }
