@@ -16,10 +16,10 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
     
     
     const [autoDmReply, setAutoDmReply] = useState(settings?.autoDmReply ?? false)
-    const [dmReplyTemplate, setDmReplyTemplate] = useState(settings?.dmReplyTemplate ?? '')
-    const [dmReplyDelayMin, setDmReplyDelayMin] = useState(settings?.dmReplyDelayMin ?? 1)
-    const [dmReplyDelayMax, setDmReplyDelayMax] = useState(settings?.dmReplyDelayMax ?? 10)
-    const [dmUseAi, setDmUseAi] = useState(settings?.dmUseAi ?? false)
+    const [dmReplyTemplate, setDmReplyTemplate] = useState(settings?.dmReplyTemplate ?? settings?.dmTemplate ?? '')
+    const [dmReplyDelayMin, setDmReplyDelayMin] = useState(settings?.dmReplyDelayMin ?? settings?.dmDelayMin ?? 1)
+    const [dmReplyDelayMax, setDmReplyDelayMax] = useState(settings?.dmReplyDelayMax ?? settings?.dmDelayMax ?? 10)
+    const [dmUseAi, setDmUseAi] = useState(settings?.dmUseAi ?? (settings?.dmMode === 'AI'))
     const [dmAiPersonality, setDmAiPersonality] = useState(settings?.dmAiPersonality ?? '')
     
     const [isSaving, setIsSaving] = useState(false)
@@ -213,11 +213,18 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
 
             {/* Activity Log */}
             <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5">
+                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Bot className="w-5 h-5 text-gray-500" />
                         <h2 className="text-lg font-bold text-foreground">{t('recentActivity', { defaultValue: 'Recent activity' })}</h2>
                     </div>
+                    <button
+                        onClick={() => loadLog(logPage)}
+                        disabled={isLoadingLog}
+                        className="px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-all disabled:opacity-50"
+                    >
+                        {isLoadingLog ? '...' : '↻ Refresh'}
+                    </button>
                 </div>
                 
                 <div className="overflow-x-auto">
@@ -238,7 +245,13 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
                                 </tr>
                             ) : log.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-muted-text">{t('noActivity', { defaultValue: 'No activity yet' })}</td>
+                                    <td colSpan={5} className="px-6 py-12 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <MessageCircle className="w-8 h-8 text-muted-text/30" />
+                                            <p className="text-muted-text text-sm">{t('noActivity', { defaultValue: 'No activity yet' })}</p>
+                                            <p className="text-muted-text/60 text-xs">DM events will appear here once automation is active</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             ) : (
                                 log.map((event) => (
@@ -248,17 +261,40 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
                                                     DM reply
                                                 </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-medium">{event.igUserId}</td>
+                                        <td className="px-6 py-4 text-sm font-medium font-mono text-xs">{event.igUserId}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            {event.status === 'DONE' && <span className="text-green-600 dark:text-green-400 font-bold text-sm">DONE</span>}
-                                            {event.status === 'PENDING' && <span className="text-purple-600 dark:text-purple-400 font-bold text-sm">PENDING</span>}
-                                            {event.status === 'PROCESSING' && <span className="text-orange-600 dark:text-orange-400 font-bold text-sm">PROCESSING</span>}
-                                            {event.status === 'FAILED' && <span className="text-red-600 dark:text-red-400 font-bold text-sm">FAILED</span>}
-                                            {event.status === 'SKIPPED' && <span className="text-gray-500 font-bold text-sm">SKIPPED</span>}
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full ${
+                                                event.status === 'DONE' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                                                event.status === 'PENDING' ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' :
+                                                event.status === 'PROCESSING' ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
+                                                event.status === 'FAILED' ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                                                'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                            }`}>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                                    event.status === 'DONE' ? 'bg-green-500' :
+                                                    event.status === 'PENDING' ? 'bg-purple-500 animate-pulse' :
+                                                    event.status === 'PROCESSING' ? 'bg-orange-500 animate-pulse' :
+                                                    event.status === 'FAILED' ? 'bg-red-500' : 'bg-gray-400'
+                                                }`} />
+                                                {event.status}
+                                            </span>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-muted-text max-w-xs truncate">
-                                            {`${event.incomingText?.substring(0,20) ?? ''}... → ${event.outgoingText?.substring(0,20) ?? ''}...`}
-                                            {event.error && <div className="text-red-500 text-xs mt-1 truncate" title={event.error}>{event.error}</div>}
+                                        <td className="px-6 py-4 text-sm max-w-xs">
+                                            <div className="space-y-1">
+                                                {event.incomingText && (
+                                                    <div className="flex items-start gap-1.5">
+                                                        <span className="text-muted-text/60 text-xs mt-0.5 shrink-0">IN:</span>
+                                                        <span className="text-foreground truncate" title={event.incomingText}>{event.incomingText}</span>
+                                                    </div>
+                                                )}
+                                                {event.outgoingText && (
+                                                    <div className="flex items-start gap-1.5">
+                                                        <span className="text-teal-500 text-xs mt-0.5 shrink-0">OUT:</span>
+                                                        <span className="text-muted-text truncate" title={event.outgoingText}>{event.outgoingText}</span>
+                                                    </div>
+                                                )}
+                                                {event.error && <div className="text-red-500 text-xs mt-1 truncate" title={event.error}>⚠ {event.error}</div>}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-muted-text whitespace-nowrap">
                                             {new Date(event.createdAt).toLocaleString()}

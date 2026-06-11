@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { requireAuth } from '@/lib/auth.utils'
 import { ActionResult } from '@/lib/types'
-import { AutomationSettings, AutomationEvent } from '@prisma/client'
+import { AutomationSettings, AutomationEvent } from '@/lib/prisma-client'
 
 export interface AutomationSettingsInput {
   connectedAccountId: string
@@ -28,10 +28,20 @@ export async function saveAutomationSettings(input: AutomationSettingsInput): Pr
       return { error: 'Account not found' }
     }
 
+    const data = {
+      accountId: input.connectedAccountId,
+      autoDmReply: input.autoDmReply,
+      dmTemplate: input.dmReplyTemplate,
+      dmDelayMin: input.dmReplyDelayMin,
+      dmDelayMax: input.dmReplyDelayMax,
+      dmMode: input.dmUseAi ? "AI" : "TEMPLATE",
+      dmAiPersonality: input.dmAiPersonality
+    }
+
     await prisma.automationSettings.upsert({
       where: { userId },
-      create: { userId, ...input },
-      update: { ...input }
+      create: { userId, ...data },
+      update: data
     })
 
     revalidatePath('/automation')
@@ -62,20 +72,53 @@ export async function getAutomationLog(page: number = 1, limit: number = 20): Pr
     const userId = await requireAuth()
     const skip = (page - 1) * limit
 
+    // Find the current user's connected account to get their instagramBusinessId
+    const userAccount = await prisma.connectedAccount.findFirst({
+      where: { userId },
+      select: { instagramBusinessId: true }
+    })
+
+    // If the user has an account, find ALL accounts sharing the same IG business ID
+    // This ensures all users connected to the same IG profile see the same activity log
+    let eventFilter: any = { userId }
+    if (userAccount?.instagramBusinessId) {
+      const sharedAccounts = await prisma.connectedAccount.findMany({
+        where: { instagramBusinessId: userAccount.instagramBusinessId },
+        select: { id: true }
+      })
+      const accountIds = sharedAccounts.map(a => a.id)
+      eventFilter = { accountId: { in: accountIds } }
+    }
+
     const [events, total] = await Promise.all([
       prisma.automationEvent.findMany({
-        where: { userId },
+        where: eventFilter,
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
         include: { connectedAccount: { select: { username: true } } }
       }),
-      prisma.automationEvent.count({ where: { userId } })
+      prisma.automationEvent.count({ where: eventFilter })
     ])
+
+    const mappedEvents = events.map(event => {
+      let incomingText = null
+      let outgoingText = null
+      try {
+        const parsed = JSON.parse(event.payload || '{}')
+        incomingText = parsed.incomingText
+        outgoingText = parsed.outgoingText
+      } catch (e) {}
+      return {
+        ...event,
+        incomingText,
+        outgoingText
+      }
+    })
 
     return {
       success: true,
-      data: { events, total, pages: Math.ceil(total / limit) }
+      data: { events: mappedEvents, total, pages: Math.ceil(total / limit) }
     }
   } catch (e: any) {
     if (e.isAuthError) return { error: 'Unauthorized' }
@@ -83,3 +126,4 @@ export async function getAutomationLog(page: number = 1, limit: number = 20): Pr
     return { error: 'Failed to fetch automation log' }
   }
 }
+
