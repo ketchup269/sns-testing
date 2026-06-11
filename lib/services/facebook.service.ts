@@ -53,7 +53,7 @@ export const facebookService = {
             client_id: FACEBOOK_APP_ID,
             redirect_uri: redirectUri,
             state: state,
-            scope: 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,business_management',
+            scope: 'pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,business_management,instagram_manage_messages,pages_manage_metadata',
             response_type: 'code',
         })
         return `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`
@@ -72,7 +72,7 @@ export const facebookService = {
                 }
             })
             return response.data.access_token
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('[FacebookService] Failed to exchange code for token:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -102,7 +102,7 @@ export const facebookService = {
                 }
             })
             return response.data
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('[FacebookService] Failed to exchange for long-lived token:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -126,7 +126,7 @@ export const facebookService = {
                 }
             })
             return response.data
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('[FacebookService] Failed to fetch user profile:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -150,7 +150,7 @@ export const facebookService = {
                 }
             })
             return response.data.data as FacebookPage[]
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('[FacebookService] Failed to fetch user pages:', error.response?.data || error.message)
             const fbError = error.response?.data?.error
             throw new FacebookApiError(
@@ -179,7 +179,7 @@ export const facebookService = {
                 return response.data.instagram_business_account
             }
             return null
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error(`[FacebookService] Failed to check IG Business Account for page ${pageId}:`, error.response?.data || error.message)
             const fbError = error.response?.data?.error
             if (fbError && (fbError.code === 10 || fbError.code === 190)) {
@@ -238,7 +238,7 @@ export const facebookService = {
             }
 
             return { views, reach, saves, likes }
-        } catch (error: unknown) {
+        } catch (error: any) {
             const fbError = error.response?.data?.error
             if (fbError?.code === 100 && fbError?.error_subcode === 33) {
                 // Media likely deleted on Instagram or unsupported media type (e.g., expired story)
@@ -307,7 +307,7 @@ export const facebookService = {
             }
 
             return { totalImpressions, totalLikes }
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error(`[FacebookService] Failed to fetch account insights for ${igBusinessId}:`, error.response?.data || error.message)
             return null
         }
@@ -325,7 +325,7 @@ export const facebookService = {
                 }
             })
             return response.data.followers_count || 0
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error(`[FacebookService] Failed to fetch followers for ${igBusinessId}:`, error.response?.data || error.message)
             return null
         }

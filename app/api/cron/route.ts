@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
 import { facebookService } from '@/lib/services/facebook.service'
+import { automationService } from '@/lib/services/automation.service'
 //import { verifySignatureAppRouter } from '@upstash/qstash/nextjs'
 import { IG_GRAPH_BASE } from '@/lib/constants'
 
@@ -185,9 +186,14 @@ async function handler(_req: Request) {
             }
         }
 
+        // 3. Process due DM automation events (auto-replies)
+        const dmResult = await automationService.processDueEvents()
+
         return NextResponse.json({
-            message: `Processed ${publishedResults.length} post(s). Synced insights for ${syncedCount} post(s).`,
-            publishedResults
+            message: `Processed ${publishedResults.length} post(s). Synced insights for ${syncedCount} post(s). DM replies: ${dmResult.dmReplies}, failed: ${dmResult.failed}.`,
+            publishedResults,
+            dmReplies: dmResult.dmReplies,
+            dmFailed: dmResult.failed
         })
     } catch (e) {
         console.error("[Cron] Error:", e)
