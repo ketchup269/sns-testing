@@ -5,6 +5,7 @@ import { Bot, CheckCircle2, AlertCircle, MessageCircle, UserPlus, ChevronLeft, C
 import { useTranslations } from 'next-intl'
 import { saveAutomationSettings, getAutomationLog, getAutomationSettings } from './actions'
 import { useAccount } from '@/app/components/AccountContext'
+import Link from 'next/link'
 
 interface AutomationClientProps {
     initialSettings: any | null
