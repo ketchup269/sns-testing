@@ -14,6 +14,10 @@ export interface AutomationSettingsInput {
   dmReplyDelayMax: number
   dmUseAi: boolean
   dmAiPersonality: string
+  autoCommentReply: boolean
+  commentUseAi: boolean
+  commentReplyTemplate: string
+  commentAiPersonality: string
 }
 
 export async function saveAutomationSettings(input: AutomationSettingsInput): Promise<ActionResult> {
@@ -35,14 +39,29 @@ export async function saveAutomationSettings(input: AutomationSettingsInput): Pr
       dmDelayMin: input.dmReplyDelayMin,
       dmDelayMax: input.dmReplyDelayMax,
       dmMode: input.dmUseAi ? "AI" : "TEMPLATE",
-      dmAiPersonality: input.dmAiPersonality
+      dmAiPersonality: input.dmAiPersonality,
+      autoCommentReply: input.autoCommentReply,
+      commentMode: input.commentUseAi ? "AI" : "TEMPLATE",
+      commentTemplate: input.commentReplyTemplate,
+      commentAiPersonality: input.commentAiPersonality
     }
 
     await prisma.automationSettings.upsert({
-      where: { userId },
+      where: { accountId: input.connectedAccountId },
       create: { userId, ...data },
       update: data
     })
+
+    if (!input.autoDmReply) {
+      await prisma.automationEvent.deleteMany({
+        where: { accountId: input.connectedAccountId, userId: userId, eventType: 'DM_REPLY' }
+      })
+    }
+    if (!input.autoCommentReply) {
+      await prisma.automationEvent.deleteMany({
+        where: { accountId: input.connectedAccountId, userId: userId, eventType: 'COMMENT_REPLY' }
+      })
+    }
 
     revalidatePath('/automation')
     return { success: true }
@@ -53,11 +72,11 @@ export async function saveAutomationSettings(input: AutomationSettingsInput): Pr
   }
 }
 
-export async function getAutomationSettings(): Promise<ActionResult<AutomationSettings | null>> {
+export async function getAutomationSettings(accountId: string): Promise<ActionResult<AutomationSettings | null>> {
   try {
     const userId = await requireAuth()
     const settings = await prisma.automationSettings.findUnique({
-      where: { userId }
+      where: { accountId }
     })
     return { success: true, data: settings }
   } catch (e: any) {
@@ -67,27 +86,22 @@ export async function getAutomationSettings(): Promise<ActionResult<AutomationSe
   }
 }
 
-export async function getAutomationLog(page: number = 1, limit: number = 20): Promise<ActionResult<{ events: any[], total: number, pages: number }>> {
+export async function getAutomationLog(accountId: string, page: number = 1, limit: number = 20, includeDm: boolean = true, includeComment: boolean = true): Promise<ActionResult<{ events: any[], total: number, pages: number }>> {
   try {
     const userId = await requireAuth()
     const skip = (page - 1) * limit
 
-    // Find the current user's connected account to get their instagramBusinessId
-    const userAccount = await prisma.connectedAccount.findFirst({
-      where: { userId },
-      select: { instagramBusinessId: true }
-    })
+    if (!includeDm && !includeComment) {
+        return { success: true, data: { events: [], total: 0, pages: 1 } }
+    }
 
-    // If the user has an account, find ALL accounts sharing the same IG business ID
-    // This ensures all users connected to the same IG profile see the same activity log
-    let eventFilter: any = { userId }
-    if (userAccount?.instagramBusinessId) {
-      const sharedAccounts = await prisma.connectedAccount.findMany({
-        where: { instagramBusinessId: userAccount.instagramBusinessId },
-        select: { id: true }
-      })
-      const accountIds = sharedAccounts.map(a => a.id)
-      eventFilter = { accountId: { in: accountIds } }
+    const eventTypes: string[] = []
+    if (includeDm) eventTypes.push('DM_REPLY')
+    if (includeComment) eventTypes.push('COMMENT_REPLY')
+
+    const eventFilter: any = { accountId }
+    if (eventTypes.length > 0) {
+        eventFilter.eventType = { in: eventTypes }
     }
 
     const [events, total] = await Promise.all([

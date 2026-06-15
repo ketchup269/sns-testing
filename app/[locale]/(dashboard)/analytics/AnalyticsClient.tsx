@@ -5,8 +5,11 @@ import {
     BarChart3, TrendingUp, Clock, Users, Heart, Bookmark, Share2,
     Instagram, Calendar, Download, ChevronDown
 } from 'lucide-react'
-import { firstImageUrl } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useAccount } from '@/app/components/AccountContext'
+import { useEffect } from 'react'
+import { firstImageUrl } from '@/lib/utils'
 
 interface Stat { label: string; value: string; trend: string; icon: React.ElementType; color: string; bg: string }
 interface EngagementItem { label: string; value: number; max: number; color: string; icon: React.ElementType }
@@ -33,6 +36,19 @@ export function formatNumber(n: number): string {
 
 export default function AnalyticsClient({ postsCount, publishedCount, pendingCount, accountsCount, chartData, topPosts, bottomPosts, projects, selectedProjectId }: AnalyticsClientProps) {
     const t = useTranslations('Analytics')
+    const router = useRouter()
+    const { activeAccount } = useAccount()
+
+    useEffect(() => {
+        if (activeAccount) {
+            const params = new URLSearchParams(window.location.search)
+            if (params.get('accountId') !== activeAccount.id) {
+                params.set('accountId', activeAccount.id)
+                params.delete('projectId')
+                router.push(`?${params.toString()}`)
+            }
+        }
+    }, [activeAccount?.id, router])
 
     const stats: Stat[] = [
         { label: t('totalPosts'), value: formatNumber(postsCount), trend: postsCount > 0 ? '+' + postsCount : '0', icon: BarChart3, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-500/10' },

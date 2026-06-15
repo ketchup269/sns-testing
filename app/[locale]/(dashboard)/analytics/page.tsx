@@ -34,14 +34,18 @@ export function get30DayActivityData(posts: { createdAt: Date; schedules: { stat
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
-export default async function AnalyticsPage(props: { searchParams: Promise<{ projectId?: string }> }) {
+export default async function AnalyticsPage(props: { searchParams: Promise<{ projectId?: string, accountId?: string }> }) {
     const searchParams = await props.searchParams
     const projectId = searchParams.projectId
+    const accountId = searchParams.accountId
     
     const session = await requirePageAuth();
     const userId = session.user.id
 
-    const baseWhere = { userId: userId, ...(projectId ? { projectId } : {}) }
+    const baseWhere: any = { userId: userId, ...(projectId ? { projectId } : {}) }
+    if (accountId) {
+        baseWhere.connectedAccountId = accountId
+    }
 
     const [postsCount, publishedCount, pendingCount, accountsCount, topPosts, bottomPosts, activityPosts, projects] = await Promise.all([
         prisma.post.count({ where: baseWhere }),
@@ -65,7 +69,7 @@ export default async function AnalyticsPage(props: { searchParams: Promise<{ pro
             select: { createdAt: true, schedules: { select: { status: true } } },
         }),
         prisma.project.findMany({
-            where: { userId: userId },
+            where: { userId: userId, ...(accountId ? { accountId } : {}) },
             select: { id: true, name: true }
         })
     ])
