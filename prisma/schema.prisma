@@ -23,7 +23,7 @@ model User {
   projectImages     ProjectImage[]
   aiUsageOption     String             @default("Normal AI Use")
   patternCaches     PatternCache[]
-  automationSettings AutomationSettings?
+  automationSettings AutomationSettings[]
   automationEvents   AutomationEvent[]
 }
 
@@ -68,6 +68,7 @@ model ConnectedAccount {
   username            String?
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts               Post[]
+  projects            Project[]
   automationSettings AutomationSettings?
   automationEvents   AutomationEvent[]
 
@@ -98,6 +99,7 @@ model Post {
 model Project {
   id              String         @id @default(cuid())
   userId          String
+  accountId       String?
   name            String
   description     String?
   
@@ -135,6 +137,7 @@ model Project {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connectedAccount ConnectedAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
   posts           Post[]
   images          ProjectImage[]
   patternCaches   PatternCache[]
@@ -189,7 +192,7 @@ enum MediaType {
 
 model AutomationSettings {
   id               String           @id @default(cuid())
-  userId           String           @unique
+  userId           String           
   accountId        String           @unique
   autoDmReply      Boolean          @default(false)
   dmDelayMin       Int              @default(1)
@@ -197,6 +200,10 @@ model AutomationSettings {
   dmMode           String           @default("TEMPLATE") // "TEMPLATE" or "AI"
   dmTemplate       String?
   dmAiPersonality  String?
+  autoCommentReply Boolean          @default(false)
+  commentMode      String           @default("TEMPLATE") // "TEMPLATE" or "AI"
+  commentTemplate  String?
+  commentAiPersonality String?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 

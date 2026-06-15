@@ -1,13 +1,20 @@
 import { requireAuth } from '@/lib/auth.utils'
 import { prisma } from '@/lib/prisma'
 import { apiError, apiSuccess } from '@/lib/api.utils'
-
-export async function GET() {
+export async function GET(req: Request) {
     try {
         const userId = await requireAuth()
 
+        const { searchParams } = new URL(req.url)
+        const accountId = searchParams.get('accountId')
+
+        const whereClause: any = { userId: userId }
+        if (accountId) {
+            whereClause.accountId = accountId
+        }
+
         const projects = await prisma.project.findMany({
-            where: { userId: userId },
+            where: whereClause,
             orderBy: { updatedAt: 'desc' }
         })
 
@@ -25,7 +32,7 @@ export async function POST(req: Request) {
 
         const body = await req.json()
         const { 
-            name, description, objective,
+            name, description, objective, accountId,
             ageRange, gender, location, profession,
             toneStyle, writingStyleNotes, exampleCaptions,
             postingFrequency, preferredTimeSlots, campaignDuration,
@@ -39,6 +46,7 @@ export async function POST(req: Request) {
         const project = await prisma.project.create({
             data: {
                 userId,
+                accountId,
                 name,
                 description,
                 objective,
