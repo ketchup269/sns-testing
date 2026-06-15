@@ -16,7 +16,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
             postingFrequency, preferredTimeSlots, campaignDuration,
             preferredCtaTypes, wordsToAvoid, toneRestrictions,
             customPromptNotes, campaignSpecificInstructions,
-            defaultHashtags
+            defaultHashtags, accountId
         } = body
 
         if (!name) return new NextResponse('Name is required', { status: 400 })
@@ -25,6 +25,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
             where: { id: params.id, userId: userId },
             data: { 
                 name, 
+                accountId,
                 description,
                 objective,
                 ageRange,

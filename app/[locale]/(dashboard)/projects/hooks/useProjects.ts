@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export interface Project {
     id: string
+    accountId?: string | null
     name: string
     description?: string | null
     objective?: string | null
@@ -24,9 +25,20 @@ export interface Project {
     campaignSpecificInstructions?: string | null
 }
 
+import { useAccount } from '@/app/components/AccountContext'
+
 export function useProjects(initialProjects: Project[]) {
     const router = useRouter()
-    const [projects, setProjects] = useState<Project[]>(initialProjects)
+    const { activeAccount } = useAccount()
+    const [projects, setProjects] = useState<Project[]>([])
+
+    useEffect(() => {
+        if (activeAccount) {
+            setProjects(initialProjects.filter(p => !p.accountId || p.accountId === activeAccount.id))
+        } else {
+            setProjects(initialProjects.filter(p => !p.accountId))
+        }
+    }, [initialProjects, activeAccount?.id])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [viewingProject, setViewingProject] = useState<Project | null>(null)
     const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -132,6 +144,7 @@ export function useProjects(initialProjects: Project[]) {
                 method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    accountId: activeAccount?.id,
                     name,
                     description,
                     objective,

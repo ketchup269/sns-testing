@@ -80,6 +80,40 @@ export async function POST(req: Request) {
             }
         }
 
+        // Handle Instagram Comment Events
+        if (payload.object === 'instagram' && Array.isArray(payload.entry)) {
+            for (const entry of payload.entry) {
+                const igBusinessId = entry.id
+                if (!igBusinessId) continue
+
+                if (Array.isArray(entry.changes)) {
+                    for (const change of entry.changes) {
+                        if (change.field === 'comments') {
+                            const value = change.value
+                            const commentId = value.id
+                            const fromId = value.from?.id
+                            const text = value.text
+
+                            console.log(`[FacebookWebhook] Extracted Comment from ${fromId}: "${text}"`)
+
+                            // We only process new comments (not deletes, and maybe not from the page itself)
+                            if (fromId && commentId && text) {
+                                try {
+                                    await automationService.handleCommentEvent(igBusinessId, fromId, {
+                                        commentId,
+                                        text,
+                                        mediaId: value.media?.id
+                                    })
+                                } catch (cmtErr) {
+                                    console.error('[FacebookWebhook] handleCommentEvent failed:', cmtErr)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return NextResponse.json({ success: true }, { status: 200 })
 
     } catch (e) {

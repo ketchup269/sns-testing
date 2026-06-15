@@ -32,6 +32,36 @@ Return ONLY the reply text, nothing else.`
   }
 }
 
+async function generateAiCommentReply(
+  incomingText: string,
+  personality: string | null | undefined,
+  accountUsername: string | null | undefined
+): Promise<string> {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      return 'ありがとうございます！🎉'
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' })
+
+    const prompt = `You are replying to a comment on Instagram on behalf of @${accountUsername}.
+${personality ? `Personality/tone: ${personality}` : ''}
+Incoming comment: '${incomingText}'
+Write a single natural reply. Maximum 2 sentences. Sound human.
+Match the language of the incoming comment (Japanese or English).
+Return ONLY the reply text, nothing else.`
+
+    const result = await model.generateContent(prompt)
+    const text = result.response.text()
+    return text.trim()
+  } catch (error) {
+    console.error('[AutomationService] AI comment generation failed:', error)
+    return 'ありがとうございます！🎉'
+  }
+}
+
 
 
 async function handleDmEvent(
@@ -55,22 +85,11 @@ async function handleDmEvent(
 
   console.log(`[AutomationService] Found ${allAccounts.length} accounts for igBusinessId ${igBusinessId}`)
 
-  // Pick the account that has automation settings with autoDmReply enabled
-  const account = allAccounts.find(a => a.automationSettings?.autoDmReply === true)
-    || allAccounts.find(a => a.automationSettings != null)
-    || allAccounts[0]
+  // Find ALL accounts with this IG business ID that have autoDmReply enabled
+  const activeAccounts = allAccounts.filter(a => a.automationSettings?.autoDmReply === true)
 
-  console.log(`[AutomationService] Selected account: ${account.id} (username: ${account.username})`)
-
-  if (!account.automationSettings) {
-    console.warn(`[AutomationService] No AutomationSettings for any account with igBusinessId ${igBusinessId} — skipping`)
-    return
-  }
-
-  console.log(`[AutomationService] Settings: autoDmReply=${account.automationSettings.autoDmReply}, mode=${account.automationSettings.dmMode}`)
-
-  if (account.automationSettings.autoDmReply === false) {
-    console.warn(`[AutomationService] autoDmReply is disabled for account ${account.id} — skipping`)
+  if (activeAccounts.length === 0) {
+    console.warn(`[AutomationService] No accounts with autoDmReply enabled for igBusinessId ${igBusinessId} — skipping`)
     return
   }
 
@@ -80,9 +99,13 @@ async function handleDmEvent(
     return
   }
 
+  // We use the first active account as the "primary" to determine delay and template
+  const primaryAccount = activeAccounts[0]
+  const settings = primaryAccount.automationSettings!
+
   const existing = await prisma.automationEvent.findFirst({
     where: {
-      accountId: account.id,
+      accountId: primaryAccount.id,
       payload: {
         contains: `"igMessageId":"${message.mid}"`
       }
@@ -94,22 +117,19 @@ async function handleDmEvent(
     return
   }
 
-  const min = account.automationSettings.dmDelayMin
-  const max = account.automationSettings.dmDelayMax
+  const min = settings.dmDelayMin
+  const max = settings.dmDelayMax
   const delay = Math.floor(Math.random() * ((max - min) * 60 * 1000) + (min * 60 * 1000))
 
   let outgoingText: string | null = null
-  const settings = account.automationSettings
 
   if (settings.dmMode === 'AI' && message.text) {
     console.log(`[AutomationService] Generating AI reply for: "${message.text}"`)
-    outgoingText = await generateAiDmReply(message.text, settings.dmAiPersonality, account.username)
+    outgoingText = await generateAiDmReply(message.text, settings.dmAiPersonality, primaryAccount.username)
     console.log(`[AutomationService] AI generated reply: "${outgoingText}"`)
   } else if (settings.dmTemplate) {
     outgoingText = settings.dmTemplate
     console.log(`[AutomationService] Using template reply: "${outgoingText}"`)
-  } else {
-    console.warn(`[AutomationService] No reply mode matched — dmMode: ${settings.dmMode}, has text: ${!!message.text}, has template: ${!!settings.dmTemplate}`)
   }
 
   const payloadData = {
@@ -118,19 +138,24 @@ async function handleDmEvent(
     outgoingText: outgoingText
   }
 
-  await prisma.automationEvent.create({
-    data: {
-      userId: account.userId,
-      accountId: account.id,
-      eventType: 'DM_REPLY',
-      status: 'PENDING',
-      igUserId: senderId,
-      payload: JSON.stringify(payloadData),
-      scheduledFor: new Date(Date.now() + delay)
-    }
-  })
+  const scheduledFor = new Date(Date.now() + delay)
 
-  console.log(`[AutomationService] ✅ Queued DM_REPLY for sender ${senderId} with delay ${Math.round(delay / 1000)}s`)
+  // Create an event for EVERY active account so all users see the logs
+  for (const acc of activeAccounts) {
+    await prisma.automationEvent.create({
+      data: {
+        userId: acc.userId,
+        accountId: acc.id,
+        eventType: 'DM_REPLY',
+        status: 'PENDING',
+        igUserId: senderId,
+        payload: JSON.stringify(payloadData),
+        scheduledFor: scheduledFor
+      }
+    })
+  }
+
+  console.log(`[AutomationService] ✅ Queued DM_REPLY for sender ${senderId} across ${activeAccounts.length} accounts with delay ${Math.round(delay / 1000)}s`)
 
   // Auto-process: schedule processDueEvents to run after the delay expires
   // This ensures the reply is sent without needing an external cron trigger
@@ -143,6 +168,87 @@ async function handleDmEvent(
       console.error(`[AutomationService] Auto-process failed:`, e)
     }
   }, delay + 3000) // Add 3s buffer to ensure scheduledFor has passed
+}
+
+async function handleCommentEvent(
+  igBusinessId: string,
+  senderId: string,
+  message: { commentId: string; text: string; mediaId?: string }
+): Promise<void> {
+  console.log(`[AutomationService] handleCommentEvent called:`, { igBusinessId, senderId, commentId: message.commentId, text: message.text })
+
+  const allAccounts = await prisma.connectedAccount.findMany({
+    where: { instagramBusinessId: igBusinessId },
+    include: { automationSettings: true }
+  })
+
+  if (allAccounts.length === 0) return
+
+  // Find all active accounts
+  const activeAccounts = allAccounts.filter(a => a.automationSettings?.autoCommentReply === true)
+  if (activeAccounts.length === 0) return
+
+  // Skip echo comments
+  if (senderId === igBusinessId) return
+
+  const primaryAccount = activeAccounts[0]
+  const settings = primaryAccount.automationSettings!
+
+  const existing = await prisma.automationEvent.findFirst({
+    where: {
+      accountId: primaryAccount.id,
+      payload: {
+        contains: `"igCommentId":"${message.commentId}"`
+      }
+    }
+  })
+
+  if (existing) return
+
+  // Reuse DM delay settings
+  const min = settings.dmDelayMin
+  const max = settings.dmDelayMax
+  const delay = Math.floor(Math.random() * ((max - min) * 60 * 1000) + (min * 60 * 1000))
+
+  let outgoingText: string | null = null
+
+  if (settings.commentMode === 'AI' && message.text) {
+    outgoingText = await generateAiCommentReply(message.text, settings.commentAiPersonality, primaryAccount.username)
+  } else if (settings.commentTemplate) {
+    outgoingText = settings.commentTemplate
+  }
+
+  const payloadData = {
+    igCommentId: message.commentId,
+    incomingText: message.text,
+    outgoingText: outgoingText
+  }
+
+  const scheduledFor = new Date(Date.now() + delay)
+
+  for (const acc of activeAccounts) {
+    await prisma.automationEvent.create({
+      data: {
+        userId: acc.userId,
+        accountId: acc.id,
+        eventType: 'COMMENT_REPLY',
+        status: 'PENDING',
+        igUserId: senderId,
+        payload: JSON.stringify(payloadData),
+        scheduledFor: scheduledFor
+      }
+    })
+  }
+
+  console.log(`[AutomationService] ✅ Queued COMMENT_REPLY for sender ${senderId} across ${activeAccounts.length} accounts with delay ${Math.round(delay / 1000)}s`)
+
+  setTimeout(async () => {
+    try {
+      await processDueEvents()
+    } catch (e) {
+      console.error(`[AutomationService] Auto-process failed:`, e)
+    }
+  }, delay + 3000)
 }
 
 
@@ -179,6 +285,39 @@ async function executeDmReply(event: any): Promise<void> {
   console.log(`[AutomationService] Sent DM reply to ${event.igUserId}`)
 }
 
+async function executeCommentReply(event: any): Promise<void> {
+  let outgoingText = ''
+  let igCommentId = ''
+  try {
+    const parsed = JSON.parse(event.payload || '{}')
+    outgoingText = parsed.outgoingText ?? ''
+    igCommentId = parsed.igCommentId ?? ''
+  } catch (e) {}
+
+  if (!outgoingText || outgoingText.trim() === '' || !igCommentId) {
+    throw new Error('No reply text or comment ID available')
+  }
+
+  const { pageAccessToken } = event.connectedAccount
+
+  const res = await fetch(`https://graph.facebook.com/v19.0/${igCommentId}/replies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: outgoingText,
+      access_token: pageAccessToken
+    })
+  })
+
+  const data = await res.json()
+
+  if (!res.ok || data.error) {
+    throw new Error(`Comment reply failed: ${data.error?.message ?? 'unknown'}`)
+  }
+
+  console.log(`[AutomationService] Sent Comment reply for comment ${igCommentId}`)
+}
+
 async function markSkipped(id: string): Promise<void> {
   await prisma.automationEvent.update({
     where: { id },
@@ -204,6 +343,30 @@ async function processDueEvents(): Promise<{
 
   for (const event of events) {
     try {
+      // 1. Check if another event for the same exact message/comment was already processed
+      const parsed = JSON.parse(event.payload || '{}')
+      const msgId = parsed.igMessageId || parsed.igCommentId
+
+      if (msgId) {
+         const alreadyDone = await prisma.automationEvent.findFirst({
+           where: {
+             payload: { contains: msgId },
+             status: { in: ['DONE', 'PROCESSING', 'FAILED'] },
+             id: { not: event.id }
+           }
+         })
+         
+         if (alreadyDone) {
+            // A sibling event already handled the API call. Just copy its status.
+            await prisma.automationEvent.update({
+              where: { id: event.id },
+              data: { status: alreadyDone.status, error: alreadyDone.error, processedAt: alreadyDone.processedAt || new Date() }
+            })
+            continue;
+         }
+      }
+
+      // 2. Claim the event to process it ourselves
       const result = await prisma.automationEvent.updateMany({
         where: { id: event.id, status: 'PENDING' },
         data: { status: 'PROCESSING' }
@@ -222,18 +385,33 @@ async function processDueEvents(): Promise<{
         continue
       }
 
-
+      if (event.eventType === 'DM_REPLY') {
         if (settings.autoDmReply === false) {
           await markSkipped(event.id)
           continue
         }
         await executeDmReply(event)
         dmReplies++
+      } else if (event.eventType === 'COMMENT_REPLY') {
+        if (settings.autoCommentReply === false) {
+          await markSkipped(event.id)
+          continue
+        }
+        await executeCommentReply(event)
+        dmReplies++ // Re-using dmReplies count for all replies
+      } else {
+        await markSkipped(event.id)
+        continue
+      }
 
       await prisma.automationEvent.update({
         where: { id: event.id },
         data: { status: 'DONE', processedAt: new Date() }
       })
+
+      // We don't strictly need to manually update siblings here, 
+      // because they will naturally find our 'DONE' status when they are processed in the loop!
+
     } catch (error: unknown) {
       failed++
       await prisma.automationEvent.update({
@@ -248,5 +426,6 @@ async function processDueEvents(): Promise<{
 
 export const automationService = {
   handleDmEvent,
+  handleCommentEvent,
   processDueEvents
 }

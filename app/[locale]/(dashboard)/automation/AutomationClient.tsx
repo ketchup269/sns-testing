@@ -3,35 +3,61 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Bot, CheckCircle2, AlertCircle, MessageCircle, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { saveAutomationSettings, getAutomationLog } from './actions'
+import { saveAutomationSettings, getAutomationLog, getAutomationSettings } from './actions'
+import { useAccount } from '@/app/components/AccountContext'
 import Link from 'next/link'
 
 interface AutomationClientProps {
-    settings: any | null
-    connectedAccount: { id: string; username: string | null } | null
+    initialSettings: any | null
 }
 
-export default function AutomationClient({ settings, connectedAccount }: AutomationClientProps) {
+export default function AutomationClient({ initialSettings }: AutomationClientProps) {
+    const { activeAccount: connectedAccount } = useAccount()
     const t = useTranslations('Automation')
+
+    const [settings, setSettings] = useState<any>(initialSettings)
     
+    const [autoDmReply, setAutoDmReply] = useState(false)
+    const [dmReplyTemplate, setDmReplyTemplate] = useState('')
+    const [dmUseAi, setDmUseAi] = useState(false)
+    const [dmAiPersonality, setDmAiPersonality] = useState('')
     
-    const [autoDmReply, setAutoDmReply] = useState(settings?.autoDmReply ?? false)
-    const [dmReplyTemplate, setDmReplyTemplate] = useState(settings?.dmReplyTemplate ?? settings?.dmTemplate ?? '')
-    const [dmReplyDelayMin, setDmReplyDelayMin] = useState(settings?.dmReplyDelayMin ?? settings?.dmDelayMin ?? 1)
-    const [dmReplyDelayMax, setDmReplyDelayMax] = useState(settings?.dmReplyDelayMax ?? settings?.dmDelayMax ?? 10)
-    const [dmUseAi, setDmUseAi] = useState(settings?.dmUseAi ?? (settings?.dmMode === 'AI'))
-    const [dmAiPersonality, setDmAiPersonality] = useState(settings?.dmAiPersonality ?? '')
-    
+    const [autoCommentReply, setAutoCommentReply] = useState(false)
+    const [commentReplyTemplate, setCommentReplyTemplate] = useState('')
+    const [commentUseAi, setCommentUseAi] = useState(false)
+    const [commentAiPersonality, setCommentAiPersonality] = useState('')
+
+    useEffect(() => {
+        if (settings) {
+            setAutoDmReply(settings.autoDmReply ?? false)
+            setDmReplyTemplate(settings.dmReplyTemplate ?? settings.dmTemplate ?? '')
+            setDmUseAi(settings.dmUseAi ?? (settings.dmMode === 'AI'))
+            setDmAiPersonality(settings.dmAiPersonality ?? '')
+            setAutoCommentReply(settings.autoCommentReply ?? false)
+            setCommentReplyTemplate(settings.commentReplyTemplate ?? settings.commentTemplate ?? '')
+            setCommentUseAi(settings.commentUseAi ?? (settings.commentMode === 'AI'))
+            setCommentAiPersonality(settings.commentAiPersonality ?? '')
+        } else {
+            setAutoDmReply(false)
+            setDmReplyTemplate('')
+            setDmUseAi(false)
+            setDmAiPersonality('')
+            setAutoCommentReply(false)
+            setCommentReplyTemplate('')
+            setCommentUseAi(false)
+            setCommentAiPersonality('')
+        }
+    }, [settings])
+
     const [isSaving, setIsSaving] = useState(false)
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
-    
-
     
     const [logPage, setLogPage] = useState(1)
     const [log, setLog] = useState<any[]>([])
     const [totalLogPages, setTotalLogPages] = useState(1)
     const [isLoadingLog, setIsLoadingLog] = useState(false)
+    const [isSettingsOpen, setIsSettingsOpen] = useState(true)
 
     const errorRef = useRef<HTMLDivElement>(null)
 
@@ -41,20 +67,41 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
         }
     }, [error])
 
-    useEffect(() => {
-        loadLog(1)
-    }, [])
-
-    const loadLog = async (page: number) => {
+    const loadLog = async (page: number, dmOn?: boolean, commentOn?: boolean) => {
+        if (!connectedAccount) return
         setIsLoadingLog(true)
-        const res = await getAutomationLog(page, 20)
+        
+        const dm = dmOn ?? settings?.autoDmReply ?? false
+        const comment = commentOn ?? settings?.autoCommentReply ?? false
+        
+        const res = await getAutomationLog(connectedAccount.id, page, 20, dm, comment)
         setIsLoadingLog(false)
         if (res.success && res.data) {
             setLog(res.data.events)
             setTotalLogPages(res.data.pages)
             setLogPage(page)
+        } else {
+            setLog([])
+            setTotalLogPages(1)
         }
     }
+
+    useEffect(() => {
+        if (connectedAccount) {
+            getAutomationSettings(connectedAccount.id).then(res => {
+                if (res.success && res.data) {
+                    setSettings(res.data)
+                    loadLog(1, res.data.autoDmReply, res.data.autoCommentReply)
+                } else {
+                    setSettings(null)
+                    loadLog(1, false, false)
+                }
+            })
+        } else {
+            setSettings(null)
+            setLog([])
+        }
+    }, [connectedAccount?.id])
 
     const handleSave = async () => {
         if (!connectedAccount) return
@@ -62,28 +109,38 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
         setError('')
         setMessage('')
         
-
-        
-        if (autoDmReply && dmReplyDelayMin > dmReplyDelayMax) {
-            setError('DM reply min delay cannot be greater than max delay')
-            return
-        }
-        
         setIsSaving(true)
         const res = await saveAutomationSettings({
             connectedAccountId: connectedAccount.id,
-
             autoDmReply,
             dmReplyTemplate,
-            dmReplyDelayMin,
-            dmReplyDelayMax,
+            dmReplyDelayMin: 1,
+            dmReplyDelayMax: 5,
             dmUseAi,
-            dmAiPersonality
+            dmAiPersonality,
+            autoCommentReply,
+            commentUseAi,
+            commentReplyTemplate,
+            commentAiPersonality
         })
         setIsSaving(false)
         
-        if (res.error) setError(res.error)
-        else setMessage(t('saveSuccess', { defaultValue: 'Settings saved successfully!' }))
+        if (res.error) {
+            setError(res.error)
+        } else {
+            setMessage(t('saveSuccess', { defaultValue: 'Settings saved successfully!' }))
+            setIsSettingsOpen(false)
+            
+            // Re-fetch latest settings to update UI instantly
+            const updatedSettingsRes = await getAutomationSettings(connectedAccount.id)
+            if (updatedSettingsRes.success && updatedSettingsRes.data) {
+                setSettings(updatedSettingsRes.data)
+                loadLog(1, updatedSettingsRes.data.autoDmReply, updatedSettingsRes.data.autoCommentReply)
+            } else {
+                setSettings(null)
+                loadLog(1, false, false)
+            }
+        }
     }
 
     return (
@@ -114,22 +171,38 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
             )}
 
             <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm mt-6">
-                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <button 
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="w-full px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-100/50 dark:hover:bg-white/10 transition-colors cursor-pointer text-left"
+                >
                     <div className="flex items-center gap-2">
-                        <MessageCircle className="w-5 h-5 text-teal-500" />
+                        <Bot className="w-5 h-5 text-indigo-500" />
                         <h2 className="text-lg font-bold text-foreground">
-                            {t('autoDmTitle', { defaultValue: 'Auto DM reply' })}
+                            {t('automationSettingsTitle', { defaultValue: 'Automation Settings' })}
                         </h2>
                     </div>
-                    {message && <span className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/>{message}</span>}
-                </div>
+                    <div className="flex items-center gap-4">
+                        {message && <span className="text-sm font-bold text-green-600 dark:text-green-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/>{message}</span>}
+                        <ChevronRight className={`w-5 h-5 text-muted-text transition-transform duration-300 ${isSettingsOpen ? 'rotate-90' : ''}`} />
+                    </div>
+                </button>
                 
-                <div className="p-6 space-y-8">
+                {isSettingsOpen && (
+                <div className="p-6 space-y-8 animate-in slide-in-from-top-2 duration-300">
 
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <h3 className="font-bold text-foreground">{t('autoDmToggleLabel', { defaultValue: 'Automatically reply to incoming direct messages' })}</h3>
+                            {/* Auto DM Section */}
+                            <div>
+                                <div className="flex items-center gap-2 mb-6">
+                                    <MessageCircle className="w-5 h-5 text-teal-500" />
+                                    <h2 className="text-lg font-bold text-foreground">
+                                        {t('autoDmTitle', { defaultValue: 'Auto DM reply' })}
+                                    </h2>
                                 </div>
+
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="font-bold text-foreground">{t('autoDmToggleLabel', { defaultValue: 'Automatically reply to incoming direct messages' })}</h3>
+                                    </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" className="sr-only peer" checked={autoDmReply} onChange={e => setAutoDmReply(e.target.checked)} />
                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
@@ -180,24 +253,76 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
                                             />
                                         </div>
                                     )}
-
-                                    <div>
-                                        <h4 className="font-bold text-foreground">{t('responseDelay', { defaultValue: 'Response delay (minutes)' })}</h4>
-                                        <p className="text-sm text-muted-text mt-1">{t('responseDelayDesc', { defaultValue: 'A random delay makes the action look natural' })}</p>
-                                        <div className="flex items-center gap-4 mt-3">
-                                            <div className="flex flex-col gap-1 w-32">
-                                                <label className="text-xs font-bold text-muted-text">Min</label>
-                                                <input type="number" min="1" max="60" value={dmReplyDelayMin} onChange={e => setDmReplyDelayMin(parseInt(e.target.value))} className="w-full p-2 border border-card-border rounded-xl bg-surface focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                                            </div>
-                                            <div className="flex flex-col gap-1 w-32">
-                                                <label className="text-xs font-bold text-muted-text">Max</label>
-                                                <input type="number" min="1" max="120" value={dmReplyDelayMax} onChange={e => setDmReplyDelayMax(parseInt(e.target.value))} className="w-full p-2 border border-card-border rounded-xl bg-surface focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             )}
+                            </div>
 
+                            {/* Auto Comment Section */}
+                            <div className="mt-12 pt-8 border-t border-card-border">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <MessageCircle className="w-5 h-5 text-indigo-500" />
+                                    <h2 className="text-lg font-bold text-foreground">
+                                        {t('autoCommentTitle', { defaultValue: 'Auto Comment reply' })}
+                                    </h2>
+                                </div>
+                                
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="font-bold text-foreground">{t('autoCommentToggleLabel', { defaultValue: 'Automatically reply to incoming comments' })}</h3>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" checked={autoCommentReply} onChange={e => setAutoCommentReply(e.target.checked)} />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                                    </label>
+                                </div>
+
+                                {autoCommentReply && (
+                                    <div className="space-y-6 mt-8 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <label className={`flex flex-col gap-1 p-4 rounded-xl border cursor-pointer transition-all ${!commentUseAi ? 'border-indigo-500 bg-indigo-50/30 dark:bg-indigo-500/10' : 'border-card-border hover:border-gray-300 hover:bg-surface/80'}`}>
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <input type="radio" checked={!commentUseAi} onChange={() => setCommentUseAi(false)} className="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                                    <span className="font-bold text-foreground">{t('dmModeTemplate', { defaultValue: 'Template' })}</span>
+                                                </div>
+                                                <p className="text-sm text-muted-text pl-8">{t('dmModeTemplateDesc', { defaultValue: 'Fixed reply text' })}</p>
+                                            </label>
+                                            <label className={`flex flex-col gap-1 p-4 rounded-xl border cursor-pointer transition-all ${commentUseAi ? 'border-indigo-500 bg-indigo-50/30 dark:bg-indigo-500/10' : 'border-card-border hover:border-gray-300 hover:bg-surface/80'}`}>
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <input type="radio" checked={commentUseAi} onChange={() => setCommentUseAi(true)} className="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500" />
+                                                    <span className="font-bold text-foreground">{t('dmModeAi', { defaultValue: 'AI generated' })}</span>
+                                                </div>
+                                                <p className="text-sm text-muted-text pl-8">{t('dmModeAiDesc', { defaultValue: 'Gemini writes a contextual reply' })}</p>
+                                            </label>
+                                        </div>
+
+                                        {!commentUseAi ? (
+                                            <div className="space-y-2">
+                                                <label className="font-bold text-foreground text-sm">{t('commentTemplateText', { defaultValue: 'Reply template' })}</label>
+                                                <textarea 
+                                                    value={commentReplyTemplate} 
+                                                    onChange={e => setCommentReplyTemplate(e.target.value)} 
+                                                    maxLength={1000}
+                                                    rows={4}
+                                                    placeholder={t('commentTemplatePlaceholder', { defaultValue: 'e.g. ありがとうございます！🎉' })}
+                                                    className="w-full p-3 border border-card-border rounded-xl bg-surface focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <label className="font-bold text-foreground text-sm">{t('commentAiPersonality', { defaultValue: 'AI Personality/Tone' })}</label>
+                                                <textarea 
+                                                    value={commentAiPersonality} 
+                                                    onChange={e => setCommentAiPersonality(e.target.value)} 
+                                                    maxLength={500}
+                                                    rows={3}
+                                                    placeholder={t('dmAiPersonalityPlaceholder', { defaultValue: 'e.g. Warm and friendly. Use casual Japanese.' })}
+                                                    className="w-full p-3 border border-card-border rounded-xl bg-surface focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
                     <div className="mt-8 flex justify-end">
                         <button 
@@ -209,125 +334,134 @@ export default function AutomationClient({ settings, connectedAccount }: Automat
                         </button>
                     </div>
                 </div>
+                )}
             </div>
 
             {/* Activity Log */}
-            <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
-                <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Bot className="w-5 h-5 text-gray-500" />
-                        <h2 className="text-lg font-bold text-foreground">{t('recentActivity', { defaultValue: 'Recent activity' })}</h2>
+            {(settings?.autoDmReply || settings?.autoCommentReply) && (
+                <div className="bg-card border border-card-border rounded-2xl overflow-hidden shadow-sm">
+                    <div className="px-6 py-5 border-b border-card-border bg-gray-50/50 dark:bg-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Bot className="w-5 h-5 text-gray-500" />
+                            <h2 className="text-lg font-bold text-foreground">{t('recentActivity', { defaultValue: 'Recent activity' })}</h2>
+                        </div>
+                        <button
+                            onClick={() => loadLog(logPage)}
+                            disabled={isLoadingLog}
+                            className="px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-all disabled:opacity-50"
+                        >
+                            {isLoadingLog ? '...' : '↻ Refresh'}
+                        </button>
                     </div>
-                    <button
-                        onClick={() => loadLog(logPage)}
-                        disabled={isLoadingLog}
-                        className="px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg border border-indigo-200 dark:border-indigo-800 transition-all disabled:opacity-50"
-                    >
-                        {isLoadingLog ? '...' : '↻ Refresh'}
-                    </button>
-                </div>
-                
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-card-border bg-surface/50 text-xs text-muted-text font-bold uppercase tracking-wider">
-                                <th className="px-6 py-3">{t('logType', { defaultValue: 'Type' })}</th>
-                                <th className="px-6 py-3">{t('logIgUserId', { defaultValue: 'IG User ID' })}</th>
-                                <th className="px-6 py-3">{t('logStatus', { defaultValue: 'Status' })}</th>
-                                <th className="px-6 py-3">{t('logDetails', { defaultValue: 'Details' })}</th>
-                                <th className="px-6 py-3">{t('logTime', { defaultValue: 'Time' })}</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-card-border">
-                            {isLoadingLog && log.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-muted-text">{t('loading', { defaultValue: 'Loading...' })}</td>
+                    
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-card-border bg-surface/50 text-xs text-muted-text font-bold uppercase tracking-wider">
+                                    <th className="px-6 py-3">{t('logType', { defaultValue: 'Type' })}</th>
+                                    <th className="px-6 py-3">{t('logIgUserId', { defaultValue: 'IG User ID' })}</th>
+                                    <th className="px-6 py-3">{t('logStatus', { defaultValue: 'Status' })}</th>
+                                    <th className="px-6 py-3">{t('logDetails', { defaultValue: 'Details' })}</th>
+                                    <th className="px-6 py-3">{t('logTime', { defaultValue: 'Time' })}</th>
                                 </tr>
-                            ) : log.length === 0 ? (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <MessageCircle className="w-8 h-8 text-muted-text/30" />
-                                            <p className="text-muted-text text-sm">{t('noActivity', { defaultValue: 'No activity yet' })}</p>
-                                            <p className="text-muted-text/60 text-xs">DM events will appear here once automation is active</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                log.map((event) => (
-                                    <tr key={event.id} className="hover:bg-surface/30 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800">
-                                                    DM reply
-                                                </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm font-medium font-mono text-xs">{event.igUserId}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full ${
-                                                event.status === 'DONE' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
-                                                event.status === 'PENDING' ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' :
-                                                event.status === 'PROCESSING' ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
-                                                event.status === 'FAILED' ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
-                                                'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                            }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                                    event.status === 'DONE' ? 'bg-green-500' :
-                                                    event.status === 'PENDING' ? 'bg-purple-500 animate-pulse' :
-                                                    event.status === 'PROCESSING' ? 'bg-orange-500 animate-pulse' :
-                                                    event.status === 'FAILED' ? 'bg-red-500' : 'bg-gray-400'
-                                                }`} />
-                                                {event.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm max-w-xs">
-                                            <div className="space-y-1">
-                                                {event.incomingText && (
-                                                    <div className="flex items-start gap-1.5">
-                                                        <span className="text-muted-text/60 text-xs mt-0.5 shrink-0">IN:</span>
-                                                        <span className="text-foreground truncate" title={event.incomingText}>{event.incomingText}</span>
-                                                    </div>
-                                                )}
-                                                {event.outgoingText && (
-                                                    <div className="flex items-start gap-1.5">
-                                                        <span className="text-teal-500 text-xs mt-0.5 shrink-0">OUT:</span>
-                                                        <span className="text-muted-text truncate" title={event.outgoingText}>{event.outgoingText}</span>
-                                                    </div>
-                                                )}
-                                                {event.error && <div className="text-red-500 text-xs mt-1 truncate" title={event.error}>⚠ {event.error}</div>}
+                            </thead>
+                            <tbody className="divide-y divide-card-border">
+                                {isLoadingLog && log.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-8 text-center text-muted-text">{t('loading', { defaultValue: 'Loading...' })}</td>
+                                    </tr>
+                                ) : log.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <MessageCircle className="w-8 h-8 text-muted-text/30" />
+                                                <p className="text-muted-text text-sm">{t('noActivity', { defaultValue: 'No activity yet' })}</p>
+                                                <p className="text-muted-text/60 text-xs">DM events will appear here once automation is active</p>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-muted-text whitespace-nowrap">
-                                            {new Date(event.createdAt).toLocaleString()}
-                                        </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-                
-                {totalLogPages > 1 && (
-                    <div className="px-6 py-4 border-t border-card-border flex items-center justify-between">
-                        <span className="text-sm text-muted-text">Page {logPage} of {totalLogPages}</span>
-                        <div className="flex items-center gap-2">
-                            <button 
-                                onClick={() => loadLog(logPage - 1)} 
-                                disabled={logPage === 1 || isLoadingLog}
-                                className="p-2 border border-card-border rounded-lg disabled:opacity-50 hover:bg-surface transition-colors"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            <button 
-                                onClick={() => loadLog(logPage + 1)} 
-                                disabled={logPage === totalLogPages || isLoadingLog}
-                                className="p-2 border border-card-border rounded-lg disabled:opacity-50 hover:bg-surface transition-colors"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </button>
-                        </div>
+                                ) : (
+                                    log.map((event) => (
+                                        <tr key={event.id} className="hover:bg-surface/30 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {event.eventType === 'COMMENT_REPLY' ? (
+                                                    <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                                        Comment reply
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400 border border-teal-200 dark:border-teal-800">
+                                                        DM reply
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-sm font-medium font-mono text-xs">{event.igUserId}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full ${
+                                                    event.status === 'DONE' ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' :
+                                                    event.status === 'PENDING' ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400' :
+                                                    event.status === 'PROCESSING' ? 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' :
+                                                    event.status === 'FAILED' ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' :
+                                                    'bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                                }`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                                        event.status === 'DONE' ? 'bg-green-500' :
+                                                        event.status === 'PENDING' ? 'bg-purple-500 animate-pulse' :
+                                                        event.status === 'PROCESSING' ? 'bg-orange-500 animate-pulse' :
+                                                        event.status === 'FAILED' ? 'bg-red-500' : 'bg-gray-400'
+                                                    }`} />
+                                                    {event.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm max-w-xs">
+                                                <div className="space-y-1">
+                                                    {event.incomingText && (
+                                                        <div className="flex items-start gap-1.5">
+                                                            <span className="text-muted-text/60 text-xs mt-0.5 shrink-0">IN:</span>
+                                                            <span className="text-foreground truncate" title={event.incomingText}>{event.incomingText}</span>
+                                                        </div>
+                                                    )}
+                                                    {event.outgoingText && (
+                                                        <div className="flex items-start gap-1.5">
+                                                            <span className="text-teal-500 text-xs mt-0.5 shrink-0">OUT:</span>
+                                                            <span className="text-muted-text truncate" title={event.outgoingText}>{event.outgoingText}</span>
+                                                        </div>
+                                                    )}
+                                                    {event.error && <div className="text-red-500 text-xs mt-1 truncate" title={event.error}>⚠ {event.error}</div>}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-sm text-muted-text whitespace-nowrap">
+                                                {new Date(event.createdAt).toLocaleString()}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                )}
-            </div>
+                    
+                    {totalLogPages > 1 && (
+                        <div className="px-6 py-4 border-t border-card-border flex items-center justify-between">
+                            <span className="text-sm text-muted-text">Page {logPage} of {totalLogPages}</span>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => loadLog(logPage - 1)} 
+                                    disabled={logPage === 1 || isLoadingLog}
+                                    className="p-2 border border-card-border rounded-lg disabled:opacity-50 hover:bg-surface transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={() => loadLog(logPage + 1)} 
+                                    disabled={logPage === totalLogPages || isLoadingLog}
+                                    className="p-2 border border-card-border rounded-lg disabled:opacity-50 hover:bg-surface transition-colors"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }

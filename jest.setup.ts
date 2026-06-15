@@ -50,6 +50,11 @@ class MockRequest {
   async text() {
     return this._body ?? ''
   }
+
+  async arrayBuffer() {
+    const buf = Buffer.from(this._body ?? '')
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+  }
 }
 
 class MockResponse {
