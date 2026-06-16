@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Bot, CheckCircle2, AlertCircle, MessageCircle, UserPlus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Bot, CheckCircle2, AlertCircle, MessageCircle, UserPlus, ChevronLeft, ChevronRight, ShieldCheck, Lock, UserCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { saveAutomationSettings, getAutomationLog, getAutomationSettings } from './actions'
 import { useAccount } from '@/app/components/AccountContext'
@@ -26,6 +26,25 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
     const [commentReplyTemplate, setCommentReplyTemplate] = useState('')
     const [commentUseAi, setCommentUseAi] = useState(false)
     const [commentAiPersonality, setCommentAiPersonality] = useState('')
+
+    const [pendingToggle, setPendingToggle] = useState<'dm' | 'comment' | null>(null)
+    const [modalAgreed, setModalAgreed] = useState(false)
+
+    const handleToggleDm = (checked: boolean) => {
+        if (checked) {
+            setPendingToggle('dm')
+        } else {
+            setAutoDmReply(false)
+        }
+    }
+
+    const handleToggleComment = (checked: boolean) => {
+        if (checked) {
+            setPendingToggle('comment')
+        } else {
+            setAutoCommentReply(false)
+        }
+    }
 
     useEffect(() => {
         if (settings) {
@@ -57,7 +76,7 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
     const [log, setLog] = useState<any[]>([])
     const [totalLogPages, setTotalLogPages] = useState(1)
     const [isLoadingLog, setIsLoadingLog] = useState(false)
-    const [isSettingsOpen, setIsSettingsOpen] = useState(true)
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
     const errorRef = useRef<HTMLDivElement>(null)
 
@@ -103,7 +122,7 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
         }
     }, [connectedAccount?.id])
 
-    const handleSave = async () => {
+    const handleSave = async (overrides?: { autoDmReply?: boolean, autoCommentReply?: boolean }) => {
         if (!connectedAccount) return
         
         setError('')
@@ -112,13 +131,13 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
         setIsSaving(true)
         const res = await saveAutomationSettings({
             connectedAccountId: connectedAccount.id,
-            autoDmReply,
+            autoDmReply: overrides?.autoDmReply ?? autoDmReply,
             dmReplyTemplate,
             dmReplyDelayMin: 1,
             dmReplyDelayMax: 5,
             dmUseAi,
             dmAiPersonality,
-            autoCommentReply,
+            autoCommentReply: overrides?.autoCommentReply ?? autoCommentReply,
             commentUseAi,
             commentReplyTemplate,
             commentAiPersonality
@@ -141,6 +160,21 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
                 loadLog(1, false, false)
             }
         }
+    }
+
+    const confirmToggle = () => {
+        if (pendingToggle === 'dm') {
+            setAutoDmReply(true)
+        } else if (pendingToggle === 'comment') {
+            setAutoCommentReply(true)
+        }
+        setPendingToggle(null)
+        setModalAgreed(false)
+    }
+
+    const cancelToggle = () => {
+        setPendingToggle(null)
+        setModalAgreed(false)
     }
 
     return (
@@ -204,7 +238,7 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
                                         <h3 className="font-bold text-foreground">{t('autoDmToggleLabel', { defaultValue: 'Automatically reply to incoming direct messages' })}</h3>
                                     </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" checked={autoDmReply} onChange={e => setAutoDmReply(e.target.checked)} />
+                                    <input type="checkbox" className="sr-only peer" checked={autoDmReply} onChange={e => handleToggleDm(e.target.checked)} />
                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                                 </label>
                             </div>
@@ -271,7 +305,7 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
                                         <h3 className="font-bold text-foreground">{t('autoCommentToggleLabel', { defaultValue: 'Automatically reply to incoming comments' })}</h3>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" checked={autoCommentReply} onChange={e => setAutoCommentReply(e.target.checked)} />
+                                        <input type="checkbox" className="sr-only peer" checked={autoCommentReply} onChange={e => handleToggleComment(e.target.checked)} />
                                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
                                     </label>
                                 </div>
@@ -326,7 +360,7 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
 
                     <div className="mt-8 flex justify-end">
                         <button 
-                            onClick={handleSave}
+                            onClick={() => handleSave()}
                             disabled={isSaving || !connectedAccount}
                             className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl transition-all shadow-sm flex items-center gap-2 w-full sm:w-auto justify-center"
                         >
@@ -460,6 +494,117 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {pendingToggle && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border border-card-border p-8 relative">
+                        <button 
+                            onClick={cancelToggle} 
+                            className="absolute top-6 right-6 p-2 text-muted-text hover:text-foreground hover:bg-surface rounded-full transition-colors"
+                        >
+                            ✕
+                        </button>
+                        <div className="flex items-center gap-4 mb-6">
+                            <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center shrink-0">
+                                <ShieldCheck className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-bold text-foreground">Data Access & Privacy</h2>
+                                <p className="text-sm text-muted-text mt-1">What we access to power your automations</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 text-sm text-foreground/90">
+                            <p className="font-medium text-muted-text">
+                                Before we enable automation, we want to be completely transparent about what data our app accesses from your connected Business or Creator profile, why we need it, and how it's protected.
+                            </p>
+
+                            <div className="space-y-4">
+                                <div className="bg-surface rounded-2xl p-5 border border-card-border">
+                                    <h3 className="font-bold text-base flex items-center gap-2 mb-3">
+                                        <MessageCircle className="w-5 h-5 text-indigo-500" />
+                                        1. Direct Message Data <span className="text-xs font-normal text-muted-text bg-card px-2 py-0.5 rounded-full border border-card-border">via manage_messages</span>
+                                    </h3>
+                                    <p className="text-muted-text mb-2">We access DMs <strong>so that</strong> we can trigger instant auto-replies when customers message you.</p>
+                                    <ul className="list-disc list-outside ml-5 space-y-1 text-muted-text">
+                                        <li>Access to <strong>full text, voice notes, links, and media</strong> within customer DMs.</li>
+                                        <li>Access to <strong>sender profiles</strong> (Name, profile picture, and platform-scoped ID).</li>
+                                        <li>Access to <strong>thread metadata</strong> (Timestamps, read receipts, and delivery status).</li>
+                                        <li>Authority to <strong>automatically send messages</strong> and apply tags on your behalf.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-surface rounded-2xl p-5 border border-card-border">
+                                    <h3 className="font-bold text-base flex items-center gap-2 mb-3">
+                                        <MessageCircle className="w-5 h-5 text-teal-500" />
+                                        2. Comment Data <span className="text-xs font-normal text-muted-text bg-card px-2 py-0.5 rounded-full border border-card-border">via manage_comments</span>
+                                    </h3>
+                                    <p className="text-muted-text mb-2">We access comments <strong>so that</strong> we can instantly auto-send your lead magnet links when a customer comments on your Reel or post.</p>
+                                    <ul className="list-disc list-outside ml-5 space-y-1 text-muted-text">
+                                        <li>Access to <strong>public text and media</strong> left on posts, Reels, and live videos.</li>
+                                        <li>Access to the commenter's <strong>public profile name and ID</strong>.</li>
+                                        <li>Linkage to the <strong>specific post or ad campaign</strong> being commented on.</li>
+                                        <li>Authority to <strong>reply to, hide, or delete comments</strong> based on automation rules.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-surface rounded-2xl p-5 border border-card-border">
+                                    <h3 className="font-bold text-base flex items-center gap-2 mb-3">
+                                        <UserCircle className="w-5 h-5 text-purple-500" />
+                                        3. Account Metadata
+                                    </h3>
+                                    <p className="text-muted-text mb-2">We access account details <strong>so that</strong> we can securely route messages to the correct automation flow.</p>
+                                    <ul className="list-disc list-outside ml-5 space-y-1 text-muted-text">
+                                        <li>Access to connected <strong>Business Page names, categories, and API access tokens</strong>.</li>
+                                    </ul>
+                                </div>
+
+                                <div className="bg-surface rounded-2xl p-5 border border-card-border">
+                                    <h3 className="font-bold text-base flex items-center gap-2 mb-3">
+                                        <Lock className="w-5 h-5 text-green-500" />
+                                        4. Data Security & Usage
+                                    </h3>
+                                    <ul className="list-disc list-outside ml-5 space-y-2 text-muted-text">
+                                        <li>Data is stored securely solely to power the <strong>live-chat history dashboard</strong>.</li>
+                                        <li><strong>We do not sell customer interaction data to data brokers or third-party advertisers.</strong></li>
+                                        <li>If AI features are used, data is processed securely and <strong>never used to train public LLM models</strong>.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-card-border mt-8">
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={modalAgreed}
+                                        onChange={(e) => setModalAgreed(e.target.checked)}
+                                        className="mt-0.5 w-5 h-5 rounded border-card-border text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                    <span className="text-sm font-medium text-foreground group-hover:text-indigo-600 transition-colors">
+                                        I have read and agree to the data access and privacy terms outlined above.
+                                    </span>
+                                </label>
+                            </div>
+
+                            <div className="flex gap-4 pt-4 mt-4">
+                                <button 
+                                    onClick={cancelToggle} 
+                                    className="flex-1 py-3 bg-surface hover:bg-gray-100 dark:hover:bg-white/5 border border-card-border text-foreground font-bold rounded-xl transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={confirmToggle} 
+                                    disabled={!modalAgreed}
+                                    className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white font-bold rounded-xl shadow-md transition-colors"
+                                >
+                                    I Understand & Enable
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
