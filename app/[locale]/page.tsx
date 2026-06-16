@@ -107,9 +107,10 @@ export default async function Home() {
           </span>
         </div>
         <p className="text-xs font-semibold text-muted-text dark:text-slate-400">{t('footerDesc')}</p>
-        <div className="flex justify-center gap-4 mt-3 mb-2">
+        <div className="flex flex-wrap justify-center gap-4 mt-3 mb-2 px-4">
           <Link href="/terms" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('terms')}</Link>
           <Link href="/privacy" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('privacy')}</Link>
+          <Link href="/permissions" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('permissions')}</Link>
           <Link href="/data-deletion" className="text-xs font-medium text-muted-text hover:text-black dark:text-slate-500 dark:hover:text-white transition-colors">{t('dataDeletion')}</Link>
         </div>
         <p className="text-xs text-muted-text dark:text-slate-500 mt-1">{t('copyright')}</p>

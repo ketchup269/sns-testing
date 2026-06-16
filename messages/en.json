@@ -95,7 +95,15 @@
     "personalAccountsNotSupportedDesc": "Meta API only supports automation for Business and Creator profiles.",
     "disconnectModalTitle": "Disconnect Account",
     "disconnectModalDesc": "Are you sure you want to disconnect this Instagram account? This action cannot be undone.",
-    "disconnecting": "Processing..."
+    "disconnecting": "Processing...",
+    "permissionsTitle": "Data & Permissions",
+    "permissionsSubtitle": "Exactly what Gravia accesses on your behalf via the official Meta Graph API",
+    "permissionsMetaTitle": "Meta OAuth Permissions",
+    "permissionsDataTitle": "Runtime Data Access",
+    "permissionsBadgeRead": "Read",
+    "permissionsBadgeWrite": "Write",
+    "permissionsFootnote": "Gravia never stores your message content beyond what is shown in the Activity Log. All API calls use the official Meta Graph API v19.0.",
+    "permissionsLearnMore": "Meta Permissions Reference ↗"
   },
   "Dashboard": {
     "title": "Dashboard Overview",
@@ -327,6 +335,7 @@
     "footerDesc": "Automate Instagram with AI. Easier, Better, Faster.",
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
+    "permissions": "Permissions",
     "copyright": "© 2026 Gravia. All rights reserved.",
     "dataDeletion": "Data Deletion"
   },
@@ -335,10 +344,14 @@
     "lastUpdated": "Last Updated:",
     "s1": {
       "title": "1. Information Collection",
-      "desc": "When you use our service to automate Instagram posts, we collect:",
-      "p1": "Account Info: Name, email, credentials.",
-      "p2": "Social Media Data: Access tokens needed to publish posts, get profile info, and read metrics when you connect Facebook/Instagram.",
-      "p3": "Usage Data: Info on platform usage including schedules and published posts."
+      "p1": "When you connect your Instagram Business account and use Gravia, we collect and process the following data via the official Meta Graph API:",
+      "l1": "Account identifiers: your Facebook User ID, Page ID, and Instagram Business Account ID",
+      "l2": "Access tokens: short-lived and long-lived Page Access Tokens required to publish content and receive webhook events (stored encrypted)",
+      "l3": "Profile data: Instagram username and profile picture URL (displayed in the UI only)",
+      "l4": "Media insights (read-only): views, reach, saves, and like_count for posts you have published through Gravia",
+      "l5": "Account-level insights (read-only): total reach and profile_views for the last 30 days, and followers_count",
+      "l6": "Direct message events: the sender's Instagram User ID and message text, received via Meta Webhooks — used only to trigger the Auto DM Reply feature",
+      "l7": "Comment events: the commenter's Instagram User ID, comment text, and comment ID, received via Meta Webhooks — used only to trigger the Auto Comment Reply feature"
     },
     "s2": {
       "title": "2. Use of Information",
@@ -346,7 +359,9 @@
       "p1": "Providing, maintaining, and improving the service.",
       "p2": "Account authentication and Meta API integration.",
       "p3": "Scheduling and auto-publishing social media content.",
-      "p4": "Contact regarding updates, support, and notifications."
+      "p4": "Contact regarding updates, support, and notifications.",
+      "p5": "Delivering automation features: when Auto DM Reply or Auto Comment Reply is enabled, incoming message and comment text is passed to the Gemini AI model solely to generate a contextual reply. The text is not stored beyond what is shown in your Activity Log.",
+      "p6": "Webhook processing: Meta delivers real-time events to our server. We verify each event using HMAC-SHA256 signature validation against your App Secret before processing."
     },
     "s3": {
       "title": "3. Information Sharing",
@@ -369,6 +384,10 @@
     "s7": {
       "title": "7. Contact Us",
       "p1": "If you have any questions or concerns about this policy, please feel free to contact support."
+    },
+    "s8": {
+      "title": "8. Meta Platform Data Policy Compliance",
+      "p1": "Gravia uses the Meta Graph API and is subject to Meta's Platform Terms. We do not use data obtained via Meta APIs to train machine learning models. Message and comment content received via webhooks is used solely to generate automated replies and is not shared with third parties. You can revoke Gravia's access to your Facebook/Instagram account at any time from Facebook Settings → Apps and Websites."
     }
   },
   "Terms": {

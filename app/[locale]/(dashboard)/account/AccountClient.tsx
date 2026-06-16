@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { disconnectAccount } from './actions'
 import ConfirmModal from '../../../components/ConfirmModal'
+import PermissionsDisclosure from '../../../../components/PermissionsDisclosure'
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useTranslations } from 'next-intl'
 
@@ -198,7 +199,10 @@ export default function AccountClient({ connectedAccounts, error, success }: Acc
                         {t('readDocs')} <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                     </button>
                 </div>
-                </div>
+            </div>
+
+            <PermissionsDisclosure />
+
             <ConfirmModal
                 isOpen={!!disconnectId}
                 title={t('disconnectModalTitle')}
