@@ -113,7 +113,7 @@ export default function ProjectsClient({ initialProjects }: ProjectsClientProps)
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map(proj => (
+                    {projects.map((proj: Project) => (
                         <div key={proj.id} onClick={() => openViewModal(proj)} className="bg-card border border-card-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative group cursor-pointer hover:border-indigo-200">
                             <div className="flex items-center gap-2 mb-2">
                                 <h2 className="text-xl font-bold text-foreground truncate pr-10">{proj.name}</h2>

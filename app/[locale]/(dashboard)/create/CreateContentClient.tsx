@@ -493,7 +493,7 @@ export default function CreateContentClient({ accounts: _ignored, aiUsageOption 
                                                                         <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
                                                                     </div>
                                                                 ) : projectImages.length > 0 ? (
-                                                                    projectImages.map(img => (
+                                                                    projectImages.map((img: any) => (
                                                                         <div key={img.id} className="aspect-square relative rounded-xl border border-card-border overflow-hidden cursor-pointer group shadow-sm bg-surface" onClick={() => loadFromLibrary(img)}>
                                                                             <img src={img.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                                                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
