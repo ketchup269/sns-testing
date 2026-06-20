@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import useSWR from 'swr'
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 export interface Project {
     id: string
@@ -30,15 +33,13 @@ import { useAccount } from '@/app/components/AccountContext'
 export function useProjects(initialProjects: Project[]) {
     const router = useRouter()
     const { activeAccount } = useAccount()
-    const [projects, setProjects] = useState<Project[]>([])
+    
+    const { data: swrProjects, mutate: mutateProjects } = useSWR('/api/projects', fetcher, { fallbackData: initialProjects })
+    
+    const projects = activeAccount 
+        ? swrProjects.filter((p: Project) => !p.accountId || p.accountId === activeAccount.id)
+        : swrProjects.filter((p: Project) => !p.accountId)
 
-    useEffect(() => {
-        if (activeAccount) {
-            setProjects(initialProjects.filter(p => !p.accountId || p.accountId === activeAccount.id))
-        } else {
-            setProjects(initialProjects.filter(p => !p.accountId))
-        }
-    }, [initialProjects, activeAccount?.id])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [viewingProject, setViewingProject] = useState<Project | null>(null)
     const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -171,9 +172,9 @@ export function useProjects(initialProjects: Project[]) {
             const savedProject = await res.json()
 
             if (editingProject) {
-                setProjects(projects.map(p => p.id === savedProject.id ? savedProject : p))
+                mutateProjects(swrProjects.map((p: Project) => p.id === savedProject.id ? savedProject : p), { revalidate: false })
             } else {
-                setProjects([savedProject, ...projects])
+                mutateProjects([savedProject, ...swrProjects], { revalidate: false })
             }
             closeModal()
             router.refresh()
@@ -190,7 +191,7 @@ export function useProjects(initialProjects: Project[]) {
         try {
             const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' })
             if (!res.ok) throw new Error('削除に失敗しました。')
-            setProjects(projects.filter(p => p.id !== id))
+            mutateProjects(swrProjects.filter((p: Project) => p.id !== id), { revalidate: false })
             router.refresh()
         } catch (err: any) {
             setError(err.message)

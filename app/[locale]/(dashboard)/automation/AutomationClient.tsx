@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { saveAutomationSettings, getAutomationLog, getAutomationSettings } from './actions'
 import { useAccount } from '@/app/components/AccountContext'
 import Link from 'next/link'
+import useSWR from 'swr'
 
 interface AutomationClientProps {
     initialSettings: any | null
@@ -15,7 +16,15 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
     const { activeAccount: connectedAccount } = useAccount()
     const t = useTranslations('Automation')
 
-    const [settings, setSettings] = useState<any>(initialSettings)
+    const { data: settings, mutate: mutateSettings } = useSWR(
+        connectedAccount ? ['automationSettings', connectedAccount.id] : null,
+        async ([_, id]) => {
+            const res = await getAutomationSettings(id as string)
+            if (res.success && res.data) return res.data
+            return null
+        },
+        { fallbackData: initialSettings }
+    )
     
     const [autoDmReply, setAutoDmReply] = useState(false)
     const [dmReplyTemplate, setDmReplyTemplate] = useState('')
@@ -48,14 +57,15 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
 
     useEffect(() => {
         if (settings) {
-            setAutoDmReply(settings.autoDmReply ?? false)
-            setDmReplyTemplate(settings.dmReplyTemplate ?? settings.dmTemplate ?? '')
-            setDmUseAi(settings.dmUseAi ?? (settings.dmMode === 'AI'))
-            setDmAiPersonality(settings.dmAiPersonality ?? '')
-            setAutoCommentReply(settings.autoCommentReply ?? false)
-            setCommentReplyTemplate(settings.commentReplyTemplate ?? settings.commentTemplate ?? '')
-            setCommentUseAi(settings.commentUseAi ?? (settings.commentMode === 'AI'))
-            setCommentAiPersonality(settings.commentAiPersonality ?? '')
+            const s = settings as any
+            setAutoDmReply(s.autoDmReply ?? false)
+            setDmReplyTemplate(s.dmReplyTemplate ?? s.dmTemplate ?? '')
+            setDmUseAi(s.dmUseAi ?? (s.dmMode === 'AI'))
+            setDmAiPersonality(s.dmAiPersonality ?? '')
+            setAutoCommentReply(s.autoCommentReply ?? false)
+            setCommentReplyTemplate(s.commentReplyTemplate ?? s.commentTemplate ?? '')
+            setCommentUseAi(s.commentUseAi ?? (s.commentMode === 'AI'))
+            setCommentAiPersonality(s.commentAiPersonality ?? '')
         } else {
             setAutoDmReply(false)
             setDmReplyTemplate('')
@@ -73,10 +83,19 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
     const [error, setError] = useState('')
     
     const [logPage, setLogPage] = useState(1)
-    const [log, setLog] = useState<any[]>([])
-    const [totalLogPages, setTotalLogPages] = useState(1)
-    const [isLoadingLog, setIsLoadingLog] = useState(false)
     const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
+    const { data: logData, isLoading: isLoadingLog, mutate: mutateLog } = useSWR(
+        connectedAccount ? ['automationLog', connectedAccount.id, logPage, settings?.autoDmReply, settings?.autoCommentReply] : null,
+        async ([_, id, page, dm, comment]) => {
+            const res = await getAutomationLog(id as string, page as number, 20, dm as boolean, comment as boolean)
+            if (res.success && res.data) return res.data
+            return { events: [], pages: 1 }
+        }
+    )
+
+    const log = logData?.events || []
+    const totalLogPages = logData?.pages || 1
 
     const errorRef = useRef<HTMLDivElement>(null)
 
@@ -86,41 +105,13 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
         }
     }, [error])
 
-    const loadLog = async (page: number, dmOn?: boolean, commentOn?: boolean) => {
-        if (!connectedAccount) return
-        setIsLoadingLog(true)
-        
-        const dm = dmOn ?? settings?.autoDmReply ?? false
-        const comment = commentOn ?? settings?.autoCommentReply ?? false
-        
-        const res = await getAutomationLog(connectedAccount.id, page, 20, dm, comment)
-        setIsLoadingLog(false)
-        if (res.success && res.data) {
-            setLog(res.data.events)
-            setTotalLogPages(res.data.pages)
-            setLogPage(page)
+    const loadLog = (page: number) => {
+        if (page === logPage) {
+            mutateLog()
         } else {
-            setLog([])
-            setTotalLogPages(1)
+            setLogPage(page)
         }
     }
-
-    useEffect(() => {
-        if (connectedAccount) {
-            getAutomationSettings(connectedAccount.id).then(res => {
-                if (res.success && res.data) {
-                    setSettings(res.data)
-                    loadLog(1, res.data.autoDmReply, res.data.autoCommentReply)
-                } else {
-                    setSettings(null)
-                    loadLog(1, false, false)
-                }
-            })
-        } else {
-            setSettings(null)
-            setLog([])
-        }
-    }, [connectedAccount?.id])
 
     const handleSave = async (overrides?: { autoDmReply?: boolean, autoCommentReply?: boolean }) => {
         if (!connectedAccount) return
@@ -151,14 +142,9 @@ export default function AutomationClient({ initialSettings }: AutomationClientPr
             setIsSettingsOpen(false)
             
             // Re-fetch latest settings to update UI instantly
-            const updatedSettingsRes = await getAutomationSettings(connectedAccount.id)
-            if (updatedSettingsRes.success && updatedSettingsRes.data) {
-                setSettings(updatedSettingsRes.data)
-                loadLog(1, updatedSettingsRes.data.autoDmReply, updatedSettingsRes.data.autoCommentReply)
-            } else {
-                setSettings(null)
-                loadLog(1, false, false)
-            }
+            await mutateSettings()
+            await mutateLog()
+            setLogPage(1)
         }
     }
 

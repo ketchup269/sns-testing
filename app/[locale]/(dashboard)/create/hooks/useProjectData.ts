@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import useSWR from 'swr'
 import { Project, HistoryItem, ProjectImage } from '../types'
 import { createClient } from '@supabase/supabase-js'
 import { getProjectImageUploadUrl, registerProjectImages } from '../actions'
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,15 +18,17 @@ export function useProjectData(initialProjects: Project[] = []) {
     const [projects, setProjects] = useState<Project[]>(initialProjects)
     const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjects.length > 0 ? initialProjects[0].id : '')
 
-    // History & Drafts
-    const [history, setHistory] = useState<HistoryItem[]>([])
-    const [isLoadingHistory, setIsLoadingHistory] = useState(false)
-    const [drafts, setDrafts] = useState<HistoryItem[]>([])
-    const [isLoadingDrafts, setIsLoadingDrafts] = useState(false)
+    // History & Drafts via SWR
+    const { data: historyData, isLoading: isLoadingHistory } = useSWR(selectedProjectId ? `/api/projects/${selectedProjectId}/history` : null, fetcher)
+    const history = historyData?.history || []
 
-    // Image Library
-    const [projectImages, setProjectImages] = useState<ProjectImage[]>([])
-    const [isLoadingProjectImages, setIsLoadingProjectImages] = useState(false)
+    const { data: draftsData, isLoading: isLoadingDrafts } = useSWR(selectedProjectId ? `/api/projects/${selectedProjectId}/drafts` : null, fetcher)
+    const drafts = draftsData?.drafts || []
+
+    // Image Library via SWR
+    const { data: projectImagesData, isLoading: isLoadingProjectImages, mutate: mutateProjectImages } = useSWR(selectedProjectId ? `/api/projects/${selectedProjectId}/images` : null, fetcher)
+    const projectImages = projectImagesData || []
+
     const [isLibraryExpanded, setIsLibraryExpanded] = useState(false)
     const [isLibraryUploading, setIsLibraryUploading] = useState(false)
     const [libraryUploadProgress, setLibraryUploadProgress] = useState(0)
@@ -43,55 +48,9 @@ export function useProjectData(initialProjects: Project[] = []) {
     // Fetch project-scoped data whenever project changes
     useEffect(() => {
         if (!selectedProjectId) {
-            setHistory([])
-            setDrafts([])
-            setProjectImages([])
             setIsLibraryExpanded(false)
             return
         }
-
-        const fetchHistory = async () => {
-            setIsLoadingHistory(true)
-            try {
-                const res = await fetch(`/api/projects/${selectedProjectId}/history`)
-                if (res && res.ok) {
-                    const data = await res.json()
-                    setHistory(data.history || [])
-                }
-            } finally {
-                setIsLoadingHistory(false)
-            }
-        }
-
-        const fetchDrafts = async () => {
-            setIsLoadingDrafts(true)
-            try {
-                const res = await fetch(`/api/projects/${selectedProjectId}/drafts`)
-                if (res && res.ok) {
-                    const data = await res.json()
-                    setDrafts(data.drafts || [])
-                }
-            } finally {
-                setIsLoadingDrafts(false)
-            }
-        }
-
-        const fetchLibrary = async () => {
-            setIsLoadingProjectImages(true)
-            try {
-                const res = await fetch(`/api/projects/${selectedProjectId}/images`)
-                if (res && res.ok) {
-                    const data = await res.json()
-                    setProjectImages(data)
-                }
-            } finally {
-                setIsLoadingProjectImages(false)
-            }
-        }
-
-        fetchHistory()
-        fetchDrafts()
-        fetchLibrary()
     }, [selectedProjectId])
 
     /** Upload files to the project image library via signed URLs */
@@ -128,10 +87,7 @@ export function useProjectData(initialProjects: Project[] = []) {
                 const res = await registerProjectImages(selectedProjectId, uploadedUrls)
                 if (res.count) {
                     // Refresh the library after successful upload
-                    const refreshRes = await fetch(`/api/projects/${selectedProjectId}/images`)
-                    if (refreshRes && refreshRes.ok) {
-                        setProjectImages(await refreshRes.json())
-                    }
+                    mutateProjectImages()
                 } else {
                     console.error('[useProjectData] registerProjectImages failed:', res.error)
                 }
@@ -151,7 +107,7 @@ export function useProjectData(initialProjects: Project[] = []) {
         try {
             const res = await fetch(`/api/projects/${selectedProjectId}/images/${id}`, { method: 'DELETE' })
             if (res && res.ok) {
-                setProjectImages(prev => prev.filter(img => img.id !== id))
+                mutateProjectImages((prev: ProjectImage[] | undefined) => Array.isArray(prev) ? prev.filter((img: ProjectImage) => img.id !== id) : prev, { revalidate: false })
             }
         } catch (err) {
             console.error('[useProjectData] Delete image failed:', err)

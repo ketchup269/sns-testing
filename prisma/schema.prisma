@@ -4,27 +4,27 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
 
 model User {
-  id                String             @id @default(cuid())
-  name              String?
-  email             String             @unique
-  emailVerified     DateTime?
-  image             String?
-  password_hash     String?
-  createdAt         DateTime           @default(now())
-  accounts          Account[]
-  sessions          Session[]
-  connectedAccounts ConnectedAccount[]
-  posts             Post[]
-  projects          Project[]
-  projectImages     ProjectImage[]
-  aiUsageOption     String             @default("Normal AI Use")
-  patternCaches     PatternCache[]
-  automationSettings AutomationSettings[]
+  id                 String               @id @default(cuid())
+  name               String?
+  email              String               @unique
+  password_hash      String?
+  createdAt          DateTime             @default(now())
+  aiUsageOption      String               @default("Normal AI Use")
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
   automationEvents   AutomationEvent[]
+  automationSettings AutomationSettings[]
+  connectedAccounts  ConnectedAccount[]
+  patternCaches      PatternCache[]
+  posts              Post[]
+  projects           Project[]
+  projectImages      ProjectImage[]
+  sessions           Session[]
 }
 
 model Account {
@@ -40,10 +40,10 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -52,10 +52,12 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model ConnectedAccount {
-  id                  String   @id @default(uuid())
+  id                  String              @id @default(uuid())
   userId              String
   facebookUserId      String
   pageId              String
@@ -63,16 +65,17 @@ model ConnectedAccount {
   instagramBusinessId String
   longLivedUserToken  String
   tokenExpiry         DateTime
-  createdAt           DateTime @default(now())
+  createdAt           DateTime            @default(now())
   profilePictureUrl   String?
   username            String?
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  automationEvents    AutomationEvent[]
+  automationSettings  AutomationSettings?
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   posts               Post[]
   projects            Project[]
-  automationSettings AutomationSettings?
-  automationEvents   AutomationEvent[]
 
   @@unique([userId, pageId])
+  @@index([userId])
 }
 
 model Post {
@@ -88,59 +91,51 @@ model Post {
   saves              Int              @default(0)
   views              Int              @default(0)
   likes              Int              @default(0)
-  comments           Int              @default(0)
   mediaType          MediaType        @default(IMAGE)
+  comments           Int              @default(0)
   connectedAccount   ConnectedAccount @relation(fields: [connectedAccountId], references: [id], onDelete: Cascade)
+  project            Project?         @relation(fields: [projectId], references: [id])
   user               User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project            Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   schedules          Schedule[]
+
+  @@index([userId])
+  @@index([connectedAccountId])
+  @@index([projectId])
 }
 
 model Project {
-  id              String         @id @default(cuid())
-  userId          String
-  accountId       String?
-  name            String
-  description     String?
-  
-  // Basic Info
-  objective       String?        // awareness / engagement / sales / leads
-  defaultHashtags String[]
-  
-  // Target Audience
-  ageRange        String?
-  gender          String?
-  location        String?
-  profession      String?
-  
-  // Brand Voice & Tone
-  toneStyle       String?        // casual / professional / witty / bold / inspirational
-  writingStyleNotes String?
-  exampleCaptions String?        // 2-3 samples
-  
-  // Posting Plan
-  postingFrequency String?
-  preferredTimeSlots String?
-  campaignDuration String?
-  
-  // CTA
-  preferredCtaTypes String?      // DM / link in bio / comment / share
-  
-  // Constraints / Avoidances
-  wordsToAvoid    String?
-  toneRestrictions String?
-  
-  // Extra Instructions
-  customPromptNotes String?
+  id                           String            @id @default(cuid())
+  userId                       String
+  name                         String
+  description                  String?
+  defaultHashtags              String[]
+  ageRange                     String?
+  gender                       String?
+  toneStyle                    String?
+  writingStyleNotes            String?
+  exampleCaptions              String?
+  postingFrequency             String?
+  preferredCtaTypes            String?
+  toneRestrictions             String?
   campaignSpecificInstructions String?
+  createdAt                    DateTime          @default(now())
+  updatedAt                    DateTime          @updatedAt
+  campaignDuration             String?
+  customPromptNotes            String?
+  location                     String?
+  objective                    String?
+  preferredTimeSlots           String?
+  profession                   String?
+  wordsToAvoid                 String?
+  accountId                    String?
+  patternCaches                PatternCache[]
+  posts                        Post[]
+  connectedAccount             ConnectedAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user                         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images                       ProjectImage[]
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  connectedAccount ConnectedAccount? @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  posts           Post[]
-  images          ProjectImage[]
-  patternCaches   PatternCache[]
+  @@index([userId])
+  @@index([accountId])
 }
 
 model ProjectImage {
@@ -153,6 +148,9 @@ model ProjectImage {
   createdAt   DateTime @default(now())
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
 }
 
 model Schedule {
@@ -162,6 +160,66 @@ model Schedule {
   status       ScheduleStatus @default(PENDING)
   createdAt    DateTime       @default(now())
   post         Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status])
+}
+
+model PatternCache {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  data      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@index([projectId])
+}
+
+model AutomationSettings {
+  id                   String           @id @default(cuid())
+  userId               String
+  accountId            String           @unique
+  autoDmReply          Boolean          @default(false)
+  dmDelayMin           Int              @default(1)
+  dmDelayMax           Int              @default(5)
+  dmMode               String           @default("TEMPLATE")
+  dmTemplate           String?
+  dmAiPersonality      String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  autoCommentReply     Boolean          @default(false)
+  commentAiPersonality String?
+  commentMode          String           @default("TEMPLATE")
+  commentTemplate      String?
+  connectedAccount     ConnectedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AutomationEvent {
+  id               String           @id @default(cuid())
+  userId           String
+  accountId        String
+  igUserId         String
+  eventType        String
+  payload          String
+  status           String           @default("PENDING")
+  error            String?
+  scheduledFor     DateTime
+  processedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  connectedAccount ConnectedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([status])
 }
 
 enum ScheduleStatus {
@@ -171,59 +229,7 @@ enum ScheduleStatus {
   FAILED
 }
 
-model PatternCache {
-  id        String   @id @default(cuid())
-  projectId String
-  userId    String
-  data      String   // JSON-serialized PatternAnalysis
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([projectId, userId])
-}
-
 enum MediaType {
   IMAGE
   VIDEO
-}
-
-model AutomationSettings {
-  id               String           @id @default(cuid())
-  userId           String           
-  accountId        String           @unique
-  autoDmReply      Boolean          @default(false)
-  dmDelayMin       Int              @default(1)
-  dmDelayMax       Int              @default(5)
-  dmMode           String           @default("TEMPLATE") // "TEMPLATE" or "AI"
-  dmTemplate       String?
-  dmAiPersonality  String?
-  autoCommentReply Boolean          @default(false)
-  commentMode      String           @default("TEMPLATE") // "TEMPLATE" or "AI"
-  commentTemplate  String?
-  commentAiPersonality String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  connectedAccount ConnectedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-}
-
-model AutomationEvent {
-  id               String   @id @default(cuid())
-  userId           String
-  accountId        String
-  igUserId         String
-  eventType        String
-  payload          String
-  status           String   @default("PENDING")
-  error            String?
-  scheduledFor     DateTime
-  processedAt      DateTime?
-  createdAt        DateTime @default(now())
-
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  connectedAccount ConnectedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
 }
