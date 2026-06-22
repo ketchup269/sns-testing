@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { ChartDataPoint } from '@/lib/types'
 import AnalyticsClient from './AnalyticsClient'
 
-export const dynamic = 'force-dynamic'
+//export const dynamic = 'force-dynamic'
 
 /* @testable */
 export function get30DayActivityData(posts: { createdAt: Date; schedules: { status: string }[] }[]): ChartDataPoint[] {

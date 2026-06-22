@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import CreateContentClient from './CreateContentClient'
 
-export const dynamic = 'force-dynamic'
+//export const dynamic = 'force-dynamic'
 
 export default async function CreateContentPage() {
     const session = await requirePageAuth();

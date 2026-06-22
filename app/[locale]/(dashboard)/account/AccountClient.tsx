@@ -201,7 +201,6 @@ export default function AccountClient({ connectedAccounts, error, success }: Acc
                 </div>
             </div>
 
-            <PermissionsDisclosure />
 
             <ConfirmModal
                 isOpen={!!disconnectId}

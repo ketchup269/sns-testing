@@ -2,7 +2,7 @@ import { requirePageAuth } from '@/lib/auth.utils'
 import { prisma } from '@/lib/prisma'
 import AccountClient from './AccountClient'
 
-export const dynamic = 'force-dynamic'
+//export const dynamic = 'force-dynamic'
 
 export default async function AccountPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const searchParams = await props.searchParams
