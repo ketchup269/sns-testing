@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import ProjectsClient from './ProjectsClient'
 
-export const dynamic = 'force-dynamic'
+//export const dynamic = 'force-dynamic'
 
 export default async function ProjectsPage() {
     const session = await requirePageAuth();
