@@ -24,16 +24,16 @@ export async function getCached<T>(
   }
 
   try {
-    const cachedData = await redis.get<T>(key)
+    const cachedData = await redis.get<{ v: T }>(key)
     if (cachedData !== null) {
-      return cachedData
+      console.log(`[Redis Cache Hit] Key: ${key}`)
+      return cachedData.v
     }
 
+    console.log(`[Redis Cache Miss] Key: ${key}`)
     const data = await fetcher()
 
-    if (data !== null && data !== undefined) {
-      await redis.set(key, data, { ex: ttlSeconds })
-    }
+    await redis.set(key, { v: data }, { ex: ttlSeconds })
 
     return data
   } catch (error) {
