@@ -83,6 +83,7 @@ export function Sidebar({ user }: SidebarProps) {
                         <Link
                             key={item.key}
                             href={item.href}
+                            prefetch={false}
                             className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-out active:scale-[0.98] group relative ${isActive
                                 ? 'bg-purple-50 dark:bg-purple-900/20 text-foreground dark:text-white'
                                 : 'text-[#1E1B4B]/60 dark:text-white/60 hover:bg-surface/80 dark:hover:bg-surface/50 dark:hover:bg-white/5 hover:text-[#1E1B4B] dark:hover:text-white'
@@ -105,11 +106,11 @@ export function Sidebar({ user }: SidebarProps) {
             {/* Bottom Section: Profile/Logout */}
             <div className={`p-4 border-t border-card-border ${!isOpen ? 'lg:p-2' : ''}`}>
                 <div className={`flex flex-wrap justify-center gap-x-3 gap-y-1 mb-4 text-[10px] text-muted-text/60 transition-all duration-200 ${isOpen ? 'opacity-100' : 'lg:hidden opacity-0 h-0 overflow-hidden mb-0'}`}>
-                    <Link href="/terms" className="hover:text-foreground transition-colors">{t('terms')}</Link>
+                    <Link href="/terms" prefetch={false} className="hover:text-foreground transition-colors">{t('terms')}</Link>
                     <span>&bull;</span>
-                    <Link href="/privacy" className="hover:text-foreground transition-colors">{t('privacy')}</Link>
+                    <Link href="/privacy" prefetch={false} className="hover:text-foreground transition-colors">{t('privacy')}</Link>
                     <span>&bull;</span>
-                    <Link href="/data-deletion" className="hover:text-foreground transition-colors">{t('dataDeletion')}</Link>
+                    <Link href="/data-deletion" prefetch={false} className="hover:text-foreground transition-colors">{t('dataDeletion')}</Link>
                 </div>
                 <button
                     onClick={() => signOut({ callbackUrl: '/' })}
